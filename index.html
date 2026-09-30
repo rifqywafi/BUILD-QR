@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build QR - 3D Building QR Generator</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #050811;
+            color: #f3f4f6;
+        }
+
+        #webgl-container {
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            cursor: grab;
+        }
+
+        #webgl-container:active {
+            cursor: grabbing;
+        }
+
+        /* Glassmorphism Panel */
+        .ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 24px;
+        }
+
+        .panel {
+            pointer-events: auto;
+            background: rgba(15, 23, 42, 0.72);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Header Control Card */
+        .control-card {
+            width: 400px;
+            max-width: calc(100vw - 48px);
+            padding: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .card-header:hover {
+            opacity: 0.8;
+        }
+
+        #panel-content {
+            margin-top: 20px;
+            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin-top 0.3s ease;
+            overflow: hidden;
+            max-height: 800px; /* Cukup besar untuk menampung konten */
+            opacity: 1;
+        }
+
+        #panel-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0;
+            pointer-events: none;
+        }
+
+        #toggle-icon {
+            margin-left: auto;
+            color: #94a3b8;
+            transition: transform 0.3s ease;
+        }
+
+        #toggle-icon.collapsed {
+            transform: rotate(180deg);
+        }
+
+        .logo-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: white;
+            box-shadow: 0 4px 18px rgba(99, 102, 241, 0.5);
+        }
+
+        .title-group h1 {
+            font-size: 18px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.3px;
+        }
+
+        .title-group p {
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .input-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #cbd5e1;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 14px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .qr-input {
+            width: 100%;
+            padding: 12px 14px 12px 40px;
+            background: rgba(2, 6, 23, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .qr-input:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+            background: rgba(2, 6, 23, 0.9);
+        }
+
+        /* Preset Buttons */
+        .preset-tags {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .tag-btn {
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tag-btn:hover {
+            background: rgba(99, 102, 241, 0.25);
+            border-color: rgba(99, 102, 241, 0.5);
+            color: #f1f5f9;
+        }
+
+        /* Action Button */
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 8px 22px rgba(79, 70, 229, 0.4);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(79, 70, 229, 0.55);
+            background: linear-gradient(135deg, #4338ca, #6d28d9);
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(2, 6, 23, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            color: #cbd5e1;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Themes Grid */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .option-select {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(2, 6, 23, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            color: #cbd5e1;
+            font-size: 12px;
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Bottom Hint Overlay */
+        .bottom-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .hint-pill {
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 20px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 30px;
+            color: #e2e8f0;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            margin: 0 auto;
+        }
+
+        .hint-pill i {
+            color: #818cf8;
+            font-size: 16px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.15); }
+        }
+
+        /* Floating Mode Buttons */
+        .mode-toggles {
+            position: absolute;
+            right: 24px;
+            bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: auto;
+        }
+
+        .icon-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #cbd5e1;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+        }
+
+        .icon-btn:hover {
+            color: #fff;
+            background: rgba(99, 102, 241, 0.85);
+            border-color: rgba(165, 180, 252, 0.5);
+            transform: translateY(-3px);
+        }
+
+        .icon-btn.active {
+            background: #6366f1;
+            color: #ffffff;
+            border-color: #818cf8;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+        }
+        .tooltip::before {
+            content: attr(data-tooltip);
+            position: absolute;
+            right: 58px;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 6px 12px;
+            background: rgba(15, 23, 42, 0.9);
+            color: #fff;
+            font-size: 12px;
+            white-space: nowrap;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        .tooltip:hover::before {
+            opacity: 1;
+        }
+
+        /* Info Badge */
+        .info-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 20px;
+            color: #a5b4fc;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Canvas Container -->
+    <div id="webgl-container"></div>
+
+    <!-- UI Overlay Layer -->
+    <div class="ui-layer">
+        <!-- Control Panel (Top Left) -->
+        <div class="panel control-card">
+            <div class="card-header" id="panel-toggle">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-city"></i>
+                </div>
+                <div class="title-group">
+                    <h1>Build QR</h1>
+                    <p>3D Building QR Generator</p>
+                </div>
+                <i class="fa-solid fa-chevron-up" id="toggle-icon"></i>
+            </div>
+
+            <div id="panel-content">
+                <div class="input-group">
+                <label class="input-label" for="qr-text">Teks / URL QR Code</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-link"></i>
+                    <input type="text" id="qr-text" class="qr-input" value="https://google.com" placeholder="Masukkan Teks atau URL..." autocomplete="off">
+                </div>
+            </div>
+
+            <div class="preset-tags">
+                <button class="tag-btn" onclick="setPreset('https://google.com')">Google</button>
+                <button class="tag-btn" onclick="setPreset('https://github.com')">GitHub</button>
+                <button class="tag-btn" onclick="setPreset('Halo Dunia! 3D QR Theme')">Greeting</button>
+                <button class="tag-btn" onclick="setPreset('WIFI:S:MyHomeWifi;T:WPA;P:Secret123;;')">WiFi</button>
+            </div>
+
+            <button id="btn-generate" class="btn-primary">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                Generate QR City
+            </button>
+
+            <div class="options-grid">
+                <div>
+                    <label class="input-label">Pilih Tema</label>
+                    <select id="theme-select" class="option-select">
+                        <option value="metropolis">Metropolis (Modern)</option>
+                        <option value="village">Village (Pedesaan)</option>
+                        <option value="cyberpunk">Cyberpunk (Sci-Fi Neon)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="input-label">Variasi Bangunan</label>
+                    <button id="btn-regenerate" class="btn-secondary">
+                        <i class="fa-solid fa-dice"></i> Acak Tata Letak
+                    </button>
+                </div>
+            </div>
+
+            <div id="grid-info-badge" class="info-badge">
+                <i class="fa-solid fa-border-all"></i> Matrix: 21 × 21 Grid
+            </div>
+            </div> <!-- End panel-content -->
+        </div>
+
+        <!-- Bottom Bar Hint -->
+        <div class="bottom-bar">
+            <div class="hint-pill" id="hint-pill">
+                <i class="fa-solid fa-computer-mouse"></i>
+                <span>Klik area 3D untuk Scan Mode (Top View)</span>
+            </div>
+        </div>
+
+        <!-- Mode Toggles (Bottom Right) -->
+        <div class="mode-toggles">
+            <button id="btn-view-toggle" class="icon-btn tooltip" data-tooltip="Mode Tampak Atas (Scan)">
+                <i class="fa-solid fa-qrcode"></i>
+            </button>
+            <button id="btn-reset-cam" class="icon-btn tooltip" data-tooltip="Reset Kamera Isometric">
+                <i class="fa-solid fa-arrows-rotate"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- CDN Libraries -->
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- OrbitControls -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <!-- QR Code Generator Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+
+    <script>
+        /* ----------------------------------------------------
+           APPLICATION STATE & THEME CONFIGURATION
+        ---------------------------------------------------- */
+        let scene, camera, renderer, controls;
+        let cityGroup = new THREE.Group();
+        let envGroup = new THREE.Group();
+        let cloudsGroup = new THREE.Group();
+
+        let currentQRMatrix = null;
+        let isScanMode = false;
+        let isAnimatingCamera = false;
+        let gridCount = 21;
+        let layoutSeedOffset = 0; // Digunakan untuk tombol "Acak Tata Letak"
+
+        // Lighting References
+        let mainSunLight, ambientLight, hemiLight;
+        let cyberpunkLights = [];
+
+        // Camera Default Isometric Configuration
+        const ISO_CAM_POS = { x: 50, y: 60, z: 50 };
+        const CAM_LOOK_AT = { x: 0, y: 0, z: 0 };
+
+        /* THEME SPECIFICATIONS */
+        const THEMES = {
+            metropolis: {
+                name: 'Metropolis',
+                wallColors: [0x334155, 0x475569, 0x1e293b, 0x64748b, 0x94a3b8], // Modern concrete & glass
+                windowColor: 0xe2e8f0,
+                groundColor: 0xffffff,
+                roadColor: 0xe2e8f0,
+                waterColor: 0x38bdf8,
+                islandColor: 0xa7f3d0,
+                skyColor: 0xbae6fd,
+                fogColor: 0xdbeafe,
+                sunColor: 0xfffaed,
+                ambientIntensity: 0.65,
+                sunIntensity: 1.25
+            },
+            village: {
+                name: 'Village',
+                wallColors: [0x92400e, 0x78350f, 0x991b1b, 0x78716c, 0xb45309, 0x57534e], // Kayu gelap, bata merah, batu alam
+                windowColor: 0xfef08a,
+                groundColor: 0xf8fafc,
+                roadColor: 0xfef3c7,
+                waterColor: 0x0284c7,
+                islandColor: 0xdcfce7,
+                skyColor: 0xfed7aa,
+                fogColor: 0xffedd5,
+                sunColor: 0xffedd5,
+                ambientIntensity: 0.75,
+                sunIntensity: 1.3
+            },
+            cyberpunk: {
+                name: 'Cyberpunk',
+                wallColors: [0x1e1b4b, 0x0f172a, 0x312e81, 0x111827], // Dark cyber metals
+                neonColors: [0x06b6d4, 0xf43f5e, 0xa855f7, 0x3b82f6, 0x10b981], // Emissive neons
+                windowColor: 0x06b6d4,
+                groundColor: 0xffffff,
+                roadColor: 0xe0e7ff,
+                waterColor: 0x4c1d95,
+                islandColor: 0x1e1b4b,
+                skyColor: 0x090d16,
+                fogColor: 0x1e1b4b,
+                sunColor: 0x06b6d4,
+                ambientIntensity: 0.5,
+                sunIntensity: 0.9
+            }
+        };
+
+        let currentThemeKey = 'metropolis';
+
+        /* ----------------------------------------------------
+           INITIALIZATION
+        ---------------------------------------------------- */
+        window.addEventListener('DOMContentLoaded', () => {
+            initThreeJS();
+            setupEvents();
+            generateQRCity();
+            animate();
+        });
+
+        /* ----------------------------------------------------
+           THREE.JS SETUP
+        ---------------------------------------------------- */
+        function initThreeJS() {
+            const container = document.getElementById('webgl-container');
+
+            // 1. Scene
+            scene = new THREE.Scene();
+            updateAtmosphere();
+
+            // 2. Camera
+            camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 2500);
+            camera.position.set(ISO_CAM_POS.x, ISO_CAM_POS.y, ISO_CAM_POS.z);
+
+            // 3. Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            container.appendChild(renderer.domElement);
+
+            // 4. Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxPolarAngle = Math.PI / 2 - 0.02;
+            controls.minDistance = 10;
+            controls.maxDistance = 1500;
+            controls.target.set(0, 0, 0);
+
+            // 5. Lighting Setup
+            setupLighting();
+
+            // 6. Groups
+            scene.add(envGroup);
+            scene.add(cityGroup);
+            scene.add(cloudsGroup);
+
+            createClouds();
+        }
+
+        function updateAtmosphere() {
+            const theme = THEMES[currentThemeKey];
+            
+            // In Cyberpunk Scan Mode, brighten background fog for scan contrast
+            if (currentThemeKey === 'cyberpunk' && isScanMode) {
+                scene.background = new THREE.Color(0x0f172a);
+                scene.fog = new THREE.FogExp2(0x0f172a, 0.003);
+            } else {
+                scene.background = new THREE.Color(theme.skyColor);
+                scene.fog = new THREE.FogExp2(theme.fogColor, 0.005);
+            }
+        }
+
+        function setupLighting() {
+            const theme = THEMES[currentThemeKey];
+
+            ambientLight = new THREE.AmbientLight(0xffffff, theme.ambientIntensity);
+            scene.add(ambientLight);
+
+            hemiLight = new THREE.HemisphereLight(0xffffff, 0x444455, 0.4);
+            scene.add(hemiLight);
+
+            mainSunLight = new THREE.DirectionalLight(theme.sunColor, theme.sunIntensity);
+            mainSunLight.position.set(60, 90, 45);
+            mainSunLight.castShadow = true;
+            mainSunLight.shadow.mapSize.width = 2048;
+            mainSunLight.shadow.mapSize.height = 2048;
+            mainSunLight.shadow.camera.near = 0.5;
+            mainSunLight.shadow.camera.far = 400;
+
+            const d = 80;
+            mainSunLight.shadow.camera.left = -d;
+            mainSunLight.shadow.camera.right = d;
+            mainSunLight.shadow.camera.top = d;
+            mainSunLight.shadow.camera.bottom = -d;
+            mainSunLight.shadow.bias = -0.0005;
+
+            scene.add(mainSunLight);
+        }
+
+        function applyThemeLighting() {
+            const theme = THEMES[currentThemeKey];
+            updateAtmosphere();
+
+            if (isScanMode && currentThemeKey === 'cyberpunk') {
+                ambientLight.intensity = 1.0;
+                mainSunLight.intensity = 1.4;
+                mainSunLight.color.setHex(0xffffff);
+            } else {
+                ambientLight.intensity = theme.ambientIntensity;
+                mainSunLight.intensity = theme.sunIntensity;
+                mainSunLight.color.setHex(theme.sunColor);
+            }
+
+            cyberpunkLights.forEach(l => scene.remove(l));
+            cyberpunkLights = [];
+
+            if (currentThemeKey === 'cyberpunk' && !isScanMode) {
+                const cyanLight = new THREE.PointLight(0x06b6d4, 2.5, 90);
+                cyanLight.position.set(25, 20, 25);
+                scene.add(cyanLight);
+                cyberpunkLights.push(cyanLight);
+
+                const magentaLight = new THREE.PointLight(0xf43f5e, 2.5, 90);
+                magentaLight.position.set(-25, 20, -25);
+                scene.add(magentaLight);
+                cyberpunkLights.push(magentaLight);
+            }
+        }
+
+        /* ----------------------------------------------------
+           DRIFTING LOW-POLY CLOUDS
+        ---------------------------------------------------- */
+        function createClouds() {
+            while (cloudsGroup.children.length > 0) {
+                const c = cloudsGroup.children[0];
+                if (c.geometry) c.geometry.dispose();
+                cloudsGroup.remove(c);
+            }
+
+            const cloudMat = new THREE.MeshStandardMaterial({
+                color: currentThemeKey === 'village' ? 0xffedd5 : (currentThemeKey === 'cyberpunk' ? 0xc084fc : 0xffffff),
+                roughness: 0.9,
+                transparent: true,
+                opacity: 0.85
+            });
+
+            for (let i = 0; i < 16; i++) {
+                const cloud = new THREE.Group();
+                const numPuffs = 4 + Math.floor(Math.random() * 4);
+
+                for (let j = 0; j < numPuffs; j++) {
+                    const r = 3 + Math.random() * 4;
+                    const puff = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 1), cloudMat);
+                    puff.position.set(j * 3.5, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 3);
+                    puff.castShadow = true;
+                    cloud.add(puff);
+                }
+
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 70 + Math.random() * 80;
+                cloud.position.set(Math.cos(angle) * dist, 30 + Math.random() * 20, Math.sin(angle) * dist);
+                cloud.userData = { speed: 0.04 + Math.random() * 0.04, dist: dist, angle: angle };
+                cloudsGroup.add(cloud);
+            }
+        }
+
+        /* ----------------------------------------------------
+           OUTER ENVIRONMENT (NO CARS)
+        ---------------------------------------------------- */
+        function buildOuterEnvironment(cityTotalSize) {
+            while (envGroup.children.length > 0) {
+                const child = envGroup.children[0];
+                child.traverse(c => {
+                    if (c.geometry) c.geometry.dispose();
+                    if (c.material) {
+                        if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+                        else c.material.dispose();
+                    }
+                });
+                envGroup.remove(child);
+            }
+
+            const theme = THEMES[currentThemeKey];
+
+            // Ocean Water / Outer Base
+            const oceanGeo = new THREE.PlaneGeometry(600, 600);
+            const oceanMat = new THREE.MeshStandardMaterial({
+                color: theme.waterColor,
+                roughness: 0.15,
+                metalness: currentThemeKey === 'cyberpunk' ? 0.6 : 0.3,
+                transparent: true,
+                opacity: 0.95
+            });
+            const oceanMesh = new THREE.Mesh(oceanGeo, oceanMat);
+            oceanMesh.rotation.x = -Math.PI / 2;
+            oceanMesh.position.y = -1.2;
+            oceanMesh.receiveShadow = true;
+            envGroup.add(oceanMesh);
+
+            // Surrounding Island Base
+            const islandGeo = new THREE.CylinderGeometry(cityTotalSize / 2 + 18, cityTotalSize / 2 + 25, 1.2, 32);
+            const islandMat = new THREE.MeshStandardMaterial({
+                color: theme.islandColor,
+                roughness: 0.7
+            });
+            const islandMesh = new THREE.Mesh(islandGeo, islandMat);
+            islandMesh.position.y = -1.1;
+            islandMesh.receiveShadow = true;
+            envGroup.add(islandMesh);
+
+            // Horizon Mountains / Hills
+            const hillMat = new THREE.MeshStandardMaterial({ color: theme.islandColor, roughness: 0.9 });
+            for (let i = 0; i < 14; i++) {
+                const hRad = 20 + Math.random() * 30;
+                const hHeight = 15 + Math.random() * 30;
+                const hillGeo = new THREE.ConeGeometry(hRad, hHeight, 6);
+                const hill = new THREE.Mesh(hillGeo, hillMat);
+                
+                const angle = (i / 14) * Math.PI * 2 + (Math.random() - 0.5) * 0.2;
+                const radius = cityTotalSize / 2 + 65 + Math.random() * 40;
+                hill.position.set(Math.cos(angle) * radius, hHeight / 2 - 2, Math.sin(angle) * radius);
+                hill.castShadow = true;
+                hill.receiveShadow = true;
+                envGroup.add(hill);
+            }
+
+            // Ring Perimeter Bridge (Empty, no cars)
+            const ringRadius = cityTotalSize / 2 + 6;
+            const ringGeo = new THREE.RingGeometry(ringRadius - 1.2, ringRadius + 1.2, 48);
+            const ringMat = new THREE.MeshStandardMaterial({
+                color: currentThemeKey === 'cyberpunk' ? 0x312e81 : 0x334155,
+                side: THREE.DoubleSide,
+                roughness: 0.6
+            });
+            const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+            ringMesh.rotation.x = -Math.PI / 2;
+            ringMesh.position.y = -0.52;
+            ringMesh.receiveShadow = true;
+            envGroup.add(ringMesh);
+        }
+
+        /* ----------------------------------------------------
+           QR CODE GENERATOR & MAPPING
+        ---------------------------------------------------- */
+        function generateQRCity() {
+            const inputText = document.getElementById('qr-text').value.trim() || 'https://google.com';
+
+            try {
+                const qr = qrcode(0, 'M');
+                qr.addData(inputText);
+                qr.make();
+
+                gridCount = qr.getModuleCount();
+                
+                currentQRMatrix = [];
+                for (let r = 0; r < gridCount; r++) {
+                    const row = [];
+                    for (let c = 0; c < gridCount; c++) {
+                        row.push(qr.isDark(r, c) ? 1 : 0);
+                    }
+                    currentQRMatrix.push(row);
+                }
+
+                document.getElementById('grid-info-badge').innerHTML = 
+                    `<i class="fa-solid fa-border-all"></i> Matrix: ${gridCount} × ${gridCount} (${gridCount * gridCount} modul)`;
+
+                applyThemeLighting();
+                buildCityMesh();
+
+            } catch (err) {
+                console.error('QR Generator Error:', err);
+                alert('Teks terlalu panjang atau tidak valid untuk QR Code!');
+            }
+        }
+
+        /* ----------------------------------------------------
+           BUILD 3D MESHES BASED ON SELECTED THEME
+        ---------------------------------------------------- */
+        function buildCityMesh() {
+            clearCityGroup();
+
+            const theme = THEMES[currentThemeKey];
+            const cellSize = 1.6;
+            const totalSize = gridCount * cellSize;
+            const offset = -totalSize / 2 + cellSize / 2;
+
+            buildOuterEnvironment(totalSize);
+            createClouds();
+
+            // 1. Base City Ground Plate
+            const groundGeo = new THREE.BoxGeometry(totalSize + 4, 1.0, totalSize + 4);
+            const groundMat = new THREE.MeshStandardMaterial({
+                color: theme.groundColor,
+                roughness: 0.3
+            });
+            const groundMesh = new THREE.Mesh(groundGeo, groundMat);
+            groundMesh.position.set(0, -0.55, 0);
+            groundMesh.receiveShadow = true;
+            cityGroup.add(groundMesh);
+
+            const borderGeo = new THREE.BoxGeometry(totalSize + 4.4, 0.4, totalSize + 4.4);
+            const borderMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6 });
+            const borderMesh = new THREE.Mesh(borderGeo, borderMat);
+            borderMesh.position.set(0, -0.9, 0);
+            cityGroup.add(borderMesh);
+
+            // Pre-generate window textures for each wall color
+            const windowTextures = [];
+            if (currentThemeKey !== 'village') {
+                theme.wallColors.forEach(color => {
+                    windowTextures.push(createThemeWindowTexture(color, theme.windowColor));
+                });
+            }
+
+            // CRITICAL RULE: Pure black unlit material for ALL top roofs to ensure perfect QR scanning
+            const pureBlackRoofMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            
+            // Road Texture
+            const roadTexture = createRoadTexture(theme);
+
+            function isFinderPattern(r, c) {
+                if (r < 7 && c < 7) return true;
+                if (r < 7 && c >= gridCount - 7) return true;
+                if (r >= gridCount - 7 && c < 7) return true;
+                return false;
+            }
+
+            for (let r = 0; r < gridCount; r++) {
+                for (let c = 0; c < gridCount; c++) {
+                    const x = offset + c * cellSize;
+                    const z = offset + r * cellSize;
+                    const val = currentQRMatrix[r][c];
+
+                    // Gunakan layoutSeedOffset untuk mengacak ulang bentuk bangunan saat tombol "Acak Tata Letak" ditekan
+                    const seed = Math.abs(Math.sin((r + layoutSeedOffset) * 12.9898 + (c + layoutSeedOffset) * 78.233) * 43758.5453) % 1;
+
+                    if (val === 1) {
+                        // ========================================================
+                        // --- QR MODULE 1: BUILDINGS / HOUSES ---
+                        // ========================================================
+                        const isFinder = isFinderPattern(r, c);
+                        const bSize = cellSize; // Use full cell size for the roof cap to avoid gaps
+                        const buildingGroup = new THREE.Group();
+
+                        // Pick random color and texture based on seed
+                        const colorIdx = Math.floor(seed * theme.wallColors.length);
+                        const wallColorHex = theme.wallColors[colorIdx];
+                        const wallMat = new THREE.MeshStandardMaterial({ 
+                            color: wallColorHex, 
+                            roughness: 0.6,
+                            map: currentThemeKey !== 'village' ? windowTextures[colorIdx] : null
+                        });
+
+                        if (currentThemeKey === 'metropolis') {
+                            // --- TEMA 1: METROPOLIS ---
+                            const h = isFinder ? 2.5 : (1.0 + seed * 3.5);
+                            const bodySize = bSize * 0.95; // Slightly smaller body for gaps
+                            
+                            const bodyGeo = new THREE.BoxGeometry(bodySize, h, bodySize);
+                            const body = new THREE.Mesh(bodyGeo, wallMat);
+                            body.position.y = h / 2;
+                            body.castShadow = true;
+                            body.receiveShadow = true;
+                            buildingGroup.add(body);
+
+                            // ABSOLUTE BLACK ROOF CAP
+                            const roofCap = new THREE.Mesh(new THREE.BoxGeometry(bSize, 0.05, bSize), pureBlackRoofMat);
+                            roofCap.position.y = h + 0.025;
+                            buildingGroup.add(roofCap);
+
+                        } else if (currentThemeKey === 'village') {
+                            // --- TEMA 2: VILLAGE (RUMAH PEDESAAN) ---
+                            // Shorter height for houses
+                            const h = isFinder ? 1.0 : (0.4 + seed * 0.6);
+                            const bodySize = bSize * 0.85; 
+
+                            // House Base
+                            const body = new THREE.Mesh(new THREE.BoxGeometry(bodySize, h, bodySize), wallMat);
+                            body.position.y = h / 2;
+                            body.castShadow = true;
+                            body.receiveShadow = true;
+                            buildingGroup.add(body);
+
+                            // Slanted Gable Roof (Pyramid shape)
+                            // A ConeGeometry with 4 sides, rotated by Math.PI/4 creates a perfect square base pyramid.
+                            // To perfectly cover the bSize x bSize area, the radius must be bSize / sqrt(2)
+                            const roofRadius = bSize / Math.sqrt(2);
+                            const roofGeo = new THREE.ConeGeometry(roofRadius, 0.6, 4);
+                            const roof = new THREE.Mesh(roofGeo, pureBlackRoofMat); // MUST BE PURE BLACK
+                            roof.position.y = h + 0.3;
+                            roof.rotation.y = Math.PI / 4;
+                            buildingGroup.add(roof);
+
+                        } else {
+                            // --- TEMA 3: CYBERPUNK (FUTURISTIK SCI-FI) ---
+                            const h = isFinder ? 3.0 : (1.2 + seed * 4.5);
+                            const bodySize = bSize * 0.9;
+                            
+                            // Main Core Tower
+                            const core = new THREE.Mesh(new THREE.BoxGeometry(bodySize, h, bodySize), wallMat);
+                            core.position.y = h / 2;
+                            core.castShadow = true;
+                            core.receiveShadow = true;
+                            buildingGroup.add(core);
+
+                            // Asymmetrical Futuristic Blocks attached to sides (STRICTLY WITHIN CELL BOUNDS)
+                            const blockCount = 1 + Math.floor(seed * 3);
+                            for (let i = 0; i < blockCount; i++) {
+                                const bh = h * (0.2 + (seed * i % 0.5));
+                                const bw = bodySize * (0.5 + (seed * i % 0.4));
+                                const b = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bodySize * 1.05), wallMat);
+                                b.position.y = bh / 2 + (seed * i % (h - bh));
+                                b.castShadow = true;
+                                buildingGroup.add(b);
+                            }
+
+                            // Glowing Neon Side Strips
+                            const neonColor = theme.neonColors[Math.floor(seed * 100) % theme.neonColors.length];
+                            const neonMat = new THREE.MeshBasicMaterial({ color: neonColor });
+                            // A flat box wrapping the core, but slightly smaller than cell size
+                            const strip = new THREE.Mesh(new THREE.BoxGeometry(bodySize * 1.02, 0.15, bodySize * 1.02), neonMat);
+                            strip.position.y = h * (0.3 + (seed % 0.6));
+                            buildingGroup.add(strip);
+
+                            // ABSOLUTE BLACK ROOF CAP TO HIDE NEON IN TOP DOWN VIEW
+                            const roofCap = new THREE.Mesh(new THREE.BoxGeometry(bSize, 0.05, bSize), pureBlackRoofMat);
+                            roofCap.position.y = h + 0.025;
+                            buildingGroup.add(roofCap);
+                        }
+
+                        buildingGroup.position.set(x, 0, z);
+
+                        // GSAP Entrance
+                        buildingGroup.scale.set(1, 0.01, 1);
+                        gsap.to(buildingGroup.scale, {
+                            y: 1,
+                            duration: 0.6 + (r + c) * 0.012,
+                            ease: 'back.out(1.2)',
+                            delay: (r * 0.008 + c * 0.004)
+                        });
+
+                        cityGroup.add(buildingGroup);
+
+                    } else {
+                        // ========================================================
+                        // --- QR MODULE 0: ROADS & EMPTY SPACES ---
+                        // ========================================================
+                        const roadGeo = new THREE.BoxGeometry(cellSize - 0.05, 0.04, cellSize - 0.05);
+                        const roadMat = new THREE.MeshStandardMaterial({
+                            color: theme.roadColor,
+                            roughness: 0.5,
+                            map: roadTexture
+                        });
+                        const roadTile = new THREE.Mesh(roadGeo, roadMat);
+                        roadTile.position.set(x, 0.02, z);
+                        roadTile.receiveShadow = true;
+                        cityGroup.add(roadTile);
+
+                        if (!isFinderPattern(r, c)) {
+                            if (seed > 0.85) {
+                                // 🌲 Tree Props
+                                const treeGroup = new THREE.Group();
+                                const trunk = new THREE.Mesh(
+                                    new THREE.CylinderGeometry(0.06, 0.1, 0.5, 6), 
+                                    new THREE.MeshStandardMaterial({ color: 0x5c4033 })
+                                );
+                                trunk.position.y = 0.25;
+
+                                const leafColor = currentThemeKey === 'village' ? 0x86efac : (currentThemeKey === 'cyberpunk' ? 0x06b6d4 : 0x22c55e);
+                                const leaves = new THREE.Mesh(
+                                    new THREE.ConeGeometry(0.35, 0.9, 6), 
+                                    new THREE.MeshStandardMaterial({ color: leafColor, roughness: 0.7 })
+                                );
+                                leaves.position.y = 0.75;
+
+                                treeGroup.add(trunk);
+                                treeGroup.add(leaves);
+                                treeGroup.position.set(x + (seed - 0.85) * 0.4, 0, z + (seed - 0.85) * 0.4);
+                                treeGroup.scale.set(0.8, 0.8, 0.8);
+                                cityGroup.add(treeGroup);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Generate specific window texture based on wall color
+        function createThemeWindowTexture(wallColorHex, windowColorHex) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#' + wallColorHex.toString(16).padStart(6, '0');
+            ctx.fillRect(0, 0, 128, 256);
+
+            ctx.fillStyle = '#' + windowColorHex.toString(16).padStart(6, '0');
+            for (let r = 0; r < 14; r++) {
+                for (let c = 0; c < 4; c++) {
+                    if (Math.random() > 0.25) {
+                        ctx.fillRect(14 + c * 26, 12 + r * 16, 16, 10);
+                    }
+                }
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            return texture;
+        }
+
+        function createRoadTexture(theme) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#' + theme.roadColor.toString(16).padStart(6, '0');
+            ctx.fillRect(0, 0, 64, 64);
+
+            if (currentThemeKey === 'cyberpunk') {
+                ctx.strokeStyle = 'rgba(6, 182, 212, 0.4)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(0, 0, 64, 64);
+            } else {
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.06)';
+                ctx.lineWidth = 4;
+                ctx.strokeRect(0, 0, 64, 64);
+            }
+
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function clearCityGroup() {
+            while (cityGroup.children.length > 0) {
+                const obj = cityGroup.children[0];
+                obj.traverse((child) => {
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) {
+                        if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+                        else child.material.dispose();
+                    }
+                });
+                cityGroup.remove(obj);
+            }
+        }
+
+        /* ----------------------------------------------------
+           CAMERA INTERACTIONS & QR PERSPECTIVE FIX
+        ---------------------------------------------------- */
+        function toggleScanMode(forceMode = null) {
+            if (isAnimatingCamera) return;
+
+            const targetMode = forceMode !== null ? forceMode : !isScanMode;
+            isScanMode = targetMode;
+            isAnimatingCamera = true;
+
+            const toggleBtn = document.getElementById('btn-view-toggle');
+            const hintPill = document.getElementById('hint-pill');
+
+            applyThemeLighting();
+
+            const cellSize = 1.6;
+            const totalCitySize = gridCount * cellSize;
+            const aspect = window.innerWidth / window.innerHeight;
+
+            if (isScanMode) {
+                toggleBtn.classList.add('active');
+                hintPill.querySelector('span').textContent = 'Klik area 3D untuk kembali ke Mode Isometric';
+
+                // ==============================================================
+                // CRITICAL QR FIX: Use extremely narrow FOV (telephoto effect)
+                // This flattens the perspective like an Orthographic camera,
+                // completely hiding the colorful sides of the buildings!
+                // ==============================================================
+                const targetFov = 3; 
+                const vFovRad = (targetFov * Math.PI) / 180;
+                const paddedSize = totalCitySize * 1.25; 
+                let targetY = (paddedSize / 2) / Math.tan(vFovRad / 2);
+                if (aspect < 1) targetY /= aspect;
+
+                gsap.timeline({
+                    onUpdate: () => {
+                        camera.updateProjectionMatrix();
+                        controls.update();
+                    },
+                    onComplete: () => { isAnimatingCamera = false; }
+                })
+                .to(camera, {
+                    fov: targetFov,
+                    duration: 1.4,
+                    ease: 'power3.inOut'
+                }, 0)
+                .to(camera.position, {
+                    x: 0,
+                    y: targetY,
+                    z: 0,
+                    duration: 1.4,
+                    ease: 'power3.inOut'
+                }, 0)
+                .to(controls.target, {
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                    duration: 1.4,
+                    ease: 'power3.inOut'
+                }, 0);
+
+            } else {
+                toggleBtn.classList.remove('active');
+                hintPill.querySelector('span').textContent = 'Klik area 3D untuk Scan Mode (Top View)';
+
+                gsap.timeline({
+                    onUpdate: () => {
+                        camera.updateProjectionMatrix();
+                        controls.update();
+                    },
+                    onComplete: () => { isAnimatingCamera = false; }
+                })
+                .to(camera, {
+                    fov: 42,
+                    duration: 1.4,
+                    ease: 'power3.inOut'
+                }, 0)
+                .to(camera.position, {
+                    x: ISO_CAM_POS.x,
+                    y: ISO_CAM_POS.y,
+                    z: ISO_CAM_POS.z,
+                    duration: 1.4,
+                    ease: 'power3.inOut'
+                }, 0)
+                .to(controls.target, {
+                    x: CAM_LOOK_AT.x,
+                    y: CAM_LOOK_AT.y,
+                    z: CAM_LOOK_AT.z,
+                    duration: 1.4,
+                    ease: 'power3.inOut'
+                }, 0);
+            }
+        }
+
+        /* ----------------------------------------------------
+           EVENT LISTENERS
+        ---------------------------------------------------- */
+        function setupEvents() {
+            window.addEventListener('resize', onWindowResize);
+
+            document.getElementById('btn-generate').addEventListener('click', () => {
+                generateQRCity();
+            });
+
+            document.getElementById('qr-text').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') generateQRCity();
+            });
+
+            document.getElementById('theme-select').addEventListener('change', (e) => {
+                currentThemeKey = e.target.value;
+                generateQRCity();
+            });
+
+            // Event listener untuk tombol Regenerate (Acak Tata Letak)
+            document.getElementById('btn-regenerate').addEventListener('click', () => {
+                layoutSeedOffset = Math.random() * 10000;
+                buildCityMesh();
+            });
+
+            // Toggle Panel (Dropdown)
+            document.getElementById('panel-toggle').addEventListener('click', () => {
+                const content = document.getElementById('panel-content');
+                const icon = document.getElementById('toggle-icon');
+                content.classList.toggle('collapsed');
+                icon.classList.toggle('collapsed');
+            });
+
+            document.getElementById('btn-view-toggle').addEventListener('click', () => {
+                toggleScanMode();
+            });
+
+            document.getElementById('btn-reset-cam').addEventListener('click', () => {
+                toggleScanMode(false);
+            });
+
+            let dragCheck = false;
+            let mouseDownTime = 0;
+            const container = document.getElementById('webgl-container');
+
+            container.addEventListener('mousedown', () => {
+                dragCheck = false;
+                mouseDownTime = Date.now();
+            });
+
+            container.addEventListener('mousemove', () => {
+                dragCheck = true;
+            });
+
+            container.addEventListener('click', () => {
+                const clickDuration = Date.now() - mouseDownTime;
+                if (!dragCheck || clickDuration < 200) {
+                    toggleScanMode();
+                }
+            });
+        }
+
+        function setPreset(val) {
+            document.getElementById('qr-text').value = val;
+            generateQRCity();
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+            if (isScanMode) {
+                const cellSize = 1.6;
+                const totalCitySize = gridCount * cellSize;
+                const aspect = camera.aspect;
+                const vFovRad = (3 * Math.PI) / 180;
+                let targetY = (totalCitySize * 1.25 / 2) / Math.tan(vFovRad / 2);
+                if (aspect < 1) targetY /= aspect;
+                camera.position.y = targetY;
+            }
+        }
+
+        /* ----------------------------------------------------
+           ANIMATION LOOP
+        ---------------------------------------------------- */
+        function animate() {
+            requestAnimationFrame(animate);
+
+            cloudsGroup.children.forEach(cloud => {
+                cloud.userData.angle += cloud.userData.speed * 0.005;
+                cloud.position.x = Math.cos(cloud.userData.angle) * cloud.userData.dist;
+                cloud.position.z = Math.sin(cloud.userData.angle) * cloud.userData.dist;
+            });
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
