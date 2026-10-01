@@ -401,9 +401,52 @@
             font-weight: 600;
             margin-top: 10px;
         }
+        
+        .loading-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 14px;
+            border-radius: 20px;
+            display: none; /* diubah jadi flex saat aktif via js */
+            gap: 4px;
+            align-items: center;
+            height: 36px;
+            box-sizing: border-box;
+            z-index: 9999;
+            pointer-events: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .eq-bar {
+            width: 4px;
+            height: 14px;
+            background-color: #3b82f6;
+            border-radius: 2px;
+            animation: eq-bounce 0.8s infinite ease-in-out;
+        }
+        .eq-bar:nth-child(1) { animation-delay: 0.0s; }
+        .eq-bar:nth-child(2) { animation-delay: 0.2s; }
+        .eq-bar:nth-child(3) { animation-delay: 0.4s; }
+        .eq-bar:nth-child(4) { animation-delay: 0.6s; }
+
+        @keyframes eq-bounce {
+            0%, 100% { transform: scaleY(0.4); }
+            50% { transform: scaleY(1.2); }
+        }
     </style>
 </head>
 <body>
+    <div id="loading-indicator" class="loading-indicator">
+        <div class="eq-bar"></div>
+        <div class="eq-bar"></div>
+        <div class="eq-bar"></div>
+        <div class="eq-bar"></div>
+    </div>
 
     <!-- 3D Canvas Container -->
     <div id="webgl-container"></div>
@@ -1093,6 +1136,76 @@
             }
         }
 
+        let isTransitioning = false;
+        
+        function updateCityWithTransition(updateAction) {
+            if (isTransitioning) return;
+            
+            cityGroup.scale.set(1, 1, 1);
+            envGroup.scale.set(1, 1, 1);
+            
+            if (currentQRMatrix === null) {
+                updateAction();
+                envGroup.position.y = -150;
+                gsap.to(envGroup.position, { y: 0, duration: 0.8, ease: "back.out(1.0)" });
+                return;
+            }
+            
+            isTransitioning = true;
+            gsap.killTweensOf(cityGroup.position);
+            gsap.killTweensOf(envGroup.position);
+            
+            gsap.to([cityGroup.position, envGroup.position], {
+                y: -150, // Dijatuhkan sangat jauh ke bawah
+                duration: 0.35,
+                ease: "power2.in",
+                onComplete: () => {
+                    // Sembunyikan sepenuhnya dari render
+                    cityGroup.visible = false;
+                    envGroup.visible = false;
+                    
+                    const loader = document.getElementById('loading-indicator');
+                    loader.style.display = 'flex';
+                    
+                    // Paksa render frame kosong SEKARANG JUGA sebelum CPU dibekukan
+                    renderer.render(scene, camera);
+                    
+                    setTimeout(() => {
+                        updateAction();
+                        
+                        cityGroup.position.y = -150;
+                        envGroup.position.y = -150;
+                        
+                        // Tampilkan kembali
+                        cityGroup.visible = true;
+                        envGroup.visible = true;
+                        
+                        scene.traverse(child => { if (child.isMesh) child.frustumCulled = false; });
+                        const rt = new THREE.WebGLRenderTarget(1, 1);
+                        renderer.setRenderTarget(rt);
+                        renderer.compile(scene, camera);
+                        renderer.render(scene, camera);
+                        renderer.setRenderTarget(null);
+                        rt.dispose();
+                        scene.traverse(child => { if (child.isMesh) child.frustumCulled = true; });
+                        
+                        loader.style.display = 'none';
+                        
+                        requestAnimationFrame(() => {
+                            gsap.to([cityGroup.position, envGroup.position], {
+                                y: 0,
+                                duration: 0.5,
+                                ease: "back.out(1.0)",
+                                onComplete: () => {
+                                    isTransitioning = false;
+                                }
+                            });
+                        });
+                    }, 50);
+                }
+            });
+        }
+
         function generateQRCity() {
             const inputText = document.getElementById('qr-text').value.trim() || 'https://google.com';
             try {
@@ -1100,20 +1213,22 @@
                 qr.addData(inputText);
                 qr.make();
 
-                gridCount = qr.getModuleCount();
-                currentQRMatrix = [];
-                for (let r = 0; r < gridCount; r++) {
-                    const row = [];
-                    for (let c = 0; c < gridCount; c++) {
-                        row.push(qr.isDark(r, c) ? 1 : 0);
+                updateCityWithTransition(() => {
+                    gridCount = qr.getModuleCount();
+                    currentQRMatrix = [];
+                    for (let r = 0; r < gridCount; r++) {
+                        const row = [];
+                        for (let c = 0; c < gridCount; c++) {
+                            row.push(qr.isDark(r, c) ? 1 : 0);
+                        }
+                        currentQRMatrix.push(row);
                     }
-                    currentQRMatrix.push(row);
-                }
 
-                document.getElementById('grid-info-badge').innerHTML = `<i class="fa-solid fa-border-all"></i> Matrix: ${gridCount} × ${gridCount} (${gridCount * gridCount} modul)`;
+                    document.getElementById('grid-info-badge').innerHTML = `<i class="fa-solid fa-border-all"></i> Matrix: ${gridCount} × ${gridCount} (${gridCount * gridCount} modul)`;
 
-                applyThemeLighting();
-                buildCityMesh();
+                    applyThemeLighting();
+                    buildCityMesh();
+                });
 
             } catch (err) {
                 console.error('QR Generator Error:', err);
@@ -1570,14 +1685,21 @@
                 generateQRCity();
             });
             document.getElementById('btn-regenerate').addEventListener('click', () => {
-                layoutSeedOffset = Math.random() * 10000;
+                const loader = document.getElementById('loading-indicator');
+                loader.style.display = 'flex';
                 
-                const theme = THEMES[currentThemeKey];
-                theme.darkColors.sort(() => Math.random() - 0.5);
-                theme.lightColors.sort(() => Math.random() - 0.5);
-                // accentColors tidak diacak agar warna elemen spesifik (jembatan, mobil) konsisten
-                
-                buildCityMesh();
+                setTimeout(() => {
+                    layoutSeedOffset = Math.random() * 10000;
+                    
+                    const theme = THEMES[currentThemeKey];
+                    theme.darkColors.sort(() => Math.random() - 0.5);
+                    theme.lightColors.sort(() => Math.random() - 0.5);
+                    
+                    buildCityMesh();
+                    
+                    // Sembunyikan loader setelah selesai
+                    loader.style.display = 'none';
+                }, 40);
             });
             document.getElementById('panel-toggle').addEventListener('click', () => {
                 document.getElementById('panel-content').classList.toggle('collapsed');
