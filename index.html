@@ -428,17 +428,15 @@
                     <label class="input-label" for="qr-text">Teks / URL QR Code</label>
                     <div class="input-wrapper">
                         <i class="fa-solid fa-link"></i>
-                        <input type="text" id="qr-text" class="qr-input" value="https://cityqr-zeta.vercel.app/" placeholder="Masukkan Teks atau URL..." autocomplete="off">
+                        <input type="text" id="qr-text" class="qr-input" value="https://google.com" placeholder="Masukkan Teks atau URL..." autocomplete="off">
                     </div>
                 </div>
 
                 <div class="preset-tags">
-                    <button class="tag-btn" onclick="setPreset('Hello World!')">Greeting</button>
                     <button class="tag-btn" onclick="setPreset('https://google.com')">Google</button>
-                    <button class="tag-btn" onclick="setPreset('https://wa.me/628xxxxxxxx')">Whatsapp</button>
-                    <button class="tag-btn" onclick="setPreset('mailto:someone@example.com')">Email</button>
+                    <button class="tag-btn" onclick="setPreset('https://github.com')">GitHub</button>
+                    <button class="tag-btn" onclick="setPreset('Halo Dunia! 3D QR Theme')">Greeting</button>
                     <button class="tag-btn" onclick="setPreset('WIFI:S:MyHomeWifi;T:WPA;P:Secret123;;')">WiFi</button>
-                    <button class="tag-btn" onclick="setPreset('d3b07384-d113-4315-992a-302b11562b8a')">UUID</button>
                 </div>
 
                 <div style="display: flex; gap: 10px;">
@@ -464,7 +462,7 @@
                     <div>
                         <label class="input-label">Variasi Bangunan</label>
                         <button id="btn-regenerate" class="btn-secondary">
-                            <i class="fa-solid fa-dice"></i> Acak Tata Letak
+                            <i class="fa-solid fa-dice"></i> Acak
                         </button>
                     </div>
                 </div>
@@ -522,7 +520,6 @@
         let cloudsGroup = new THREE.Group();
         
         let animatedObjects = [];
-        let roadTextureCache = null;
 
         let currentQRMatrix = null;
         let isScanMode = false;
@@ -540,12 +537,13 @@
         const THEMES = {
             metropolis: {
                 name: 'Metropolis',
-                wallColors: [0x334155, 0x475569, 0x1e293b, 0x64748b, 0x94a3b8],
+                darkColors: [0x2A2D34, 0x1B263B, 0x2C3E2D, 0x3D405B, 0x475569, 0x64748b], // Ditambahkan abu-abu beton/slate
+                lightColors: [0xE0E1DD, 0xDCFCE7, 0xA8DADC, 0xF1F5F9], // Ditambahkan abu-abu pucat
+                accentColors: [0xF4A261, 0xE63946],
                 windowColor: 0xe2e8f0,
-                groundColor: 0x86efac, 
-                roadColor: 0x94a3b8,   
-                waterColor: 0x0ea5e9,  
-                islandColor: 0x22c55e, // Lebih hijau pekat (Vibrant Green)
+                groundColor: 0xE0E1DD,
+                waterColor: 0x0284C7,  // Air laut/sungai lebih biru pekat
+                islandColor: 0x15803D, // Hijau pulau lebih pekat (deep green)
                 skyColor: 0xbae6fd,
                 fogColor: 0xdbeafe,
                 sunColor: 0xfffaed,
@@ -554,30 +552,31 @@
             },
             village: {
                 name: 'Village',
-                wallColors: [0x92400e, 0x78350f, 0x991b1b, 0x78716c, 0xb45309, 0x57534e], 
+                darkColors: [0x3E2723, 0x4A1411, 0x1E3F20, 0x37474F],
+                lightColors: [0xF5E6CC, 0xC5E1A5, 0xB3E5FC],
+                accentColors: [0xFFB74D, 0xD84315],
                 windowColor: 0xfef08a,
-                groundColor: 0xffffff, // White inner city base for QR
-                roadColor: 0xffffff,   // White inner roads for QR
-                waterColor: 0x2563eb,  // Solid rich blue
-                islandColor: 0x4d7c0f, 
+                groundColor: 0xF5E6CC, 
+                waterColor: 0x2563eb,  
+                islandColor: 0x558B2F, // Warna rumput gelap (bukan putih/pucat lagi)
                 skyColor: 0xfed7aa,
                 fogColor: 0xffedd5,
-                sunColor: 0xffedd5,
+                sunColor: 0xFFB74D,
                 ambientIntensity: 0.75,
                 sunIntensity: 1.3
             },
             cyberpunk: {
                 name: 'Cyberpunk',
-                wallColors: [0x0f172a, 0x1e1b4b, 0x000000], 
-                neonColors: [0x06b6d4, 0xf43f5e, 0xfacc15], // Cyan, Magenta, Yellow
-                windowColor: 0x06b6d4,
-                groundColor: 0xe2e8f0, // Soft matte white/gray base
-                roadColor: 0xe2e8f0,   // Soft matte white/gray road
+                darkColors: [0x0B0014, 0x0A1128, 0x33001B, 0x002211, 0x000000, 0x080808], // Ditambahkan variasi hitam murni
+                lightColors: [0xE0FFFF, 0xFFD6E8, 0xFFFFCC],
+                accentColors: [0xFF003C, 0x39FF14], 
+                windowColor: 0x39FF14,
+                groundColor: 0x000000, 
                 waterColor: 0x4c1d95,
                 islandColor: 0x1e1b4b,
                 skyColor: 0x000000,
-                fogColor: 0x000000,
-                sunColor: 0x06b6d4,
+                fogColor: 0x110022, // Kabut ungu dihitamkan (lebih pekat/gelap)
+                sunColor: 0xFF003C,
                 ambientIntensity: 0.5,
                 sunIntensity: 0.5
             }
@@ -631,7 +630,7 @@
             controls.dampingFactor = 0.05;
             controls.maxPolarAngle = Math.PI / 2 - 0.02;
             controls.minDistance = 10;
-            controls.maxDistance = 200; // Batasi zoom out maks ~2x dari native (native distance ~93)
+            controls.maxDistance = 200; 
             controls.target.set(0, 0, 0);
 
             setupLighting();
@@ -651,11 +650,7 @@
                 scene.background = new THREE.Color(theme.skyColor);
             } else {
                 scene.background = new THREE.Color(theme.skyColor);
-                if (currentThemeKey === 'cyberpunk') {
-                    scene.fog = new THREE.FogExp2(0x000000, 0.008);
-                } else {
-                    scene.fog = new THREE.FogExp2(theme.fogColor, 0.005);
-                }
+                scene.fog = new THREE.FogExp2(theme.fogColor, currentThemeKey === 'cyberpunk' ? 0.008 : 0.005);
             }
         }
 
@@ -710,12 +705,12 @@
             cyberpunkLights = [];
 
             if (currentThemeKey === 'cyberpunk' && !isScanMode) {
-                const cyanLight = new THREE.PointLight(0x06b6d4, 2.5, 120);
+                const cyanLight = new THREE.PointLight(theme.accentColors[1], 2.5, 120);
                 cyanLight.position.set(25, 20, 25);
                 scene.add(cyanLight);
                 cyberpunkLights.push(cyanLight);
 
-                const magentaLight = new THREE.PointLight(0xf43f5e, 2.5, 120);
+                const magentaLight = new THREE.PointLight(theme.accentColors[0], 2.5, 120);
                 magentaLight.position.set(-25, 20, -25);
                 scene.add(magentaLight);
                 cyberpunkLights.push(magentaLight);
@@ -724,8 +719,9 @@
 
         function createClouds() {
             disposeGroup(cloudsGroup);
+            const theme = THEMES[currentThemeKey];
             const cloudMat = new THREE.MeshStandardMaterial({
-                color: currentThemeKey === 'village' ? 0xffedd5 : (currentThemeKey === 'cyberpunk' ? 0x1e1b4b : 0xffffff),
+                color: currentThemeKey === 'village' ? 0xffedd5 : (currentThemeKey === 'cyberpunk' ? theme.fogColor : 0xffffff),
                 roughness: 0.9,
                 transparent: true,
                 opacity: currentThemeKey === 'cyberpunk' ? 0.4 : 0.85
@@ -771,7 +767,6 @@
                 const islandDist = cityTotalSize / 2 + 30;
                 const angles = [0, Math.PI/2, Math.PI, Math.PI*1.5];
                 angles.forEach((angle, idx) => {
-                    // Island Base
                     const islandGeo = new THREE.CylinderGeometry(islandRadius, islandRadius + 4, 2, 32);
                     const islandMat = new THREE.MeshStandardMaterial({ color: theme.islandColor, roughness: 0.8 });
                     const island = new THREE.Mesh(islandGeo, islandMat);
@@ -781,34 +776,150 @@
                     island.receiveShadow = true;
                     envGroup.add(island);
 
-                    // Mini City on Island
-                    for(let j=0; j<8; j++) {
-                        const h = 3 + Math.random()*8;
-                        const bMat = new THREE.MeshStandardMaterial({ color: theme.wallColors[Math.floor(Math.random()*theme.wallColors.length)] });
-                        const b = new THREE.Mesh(new THREE.BoxGeometry(3, h, 3), bMat);
-                        b.position.set(ix + (Math.random()-0.5)*14, h/2 - 0.5, iz + (Math.random()-0.5)*14);
-                        b.castShadow = true;
-                        envGroup.add(b);
-                    }
+                    const landmarkGroup = new THREE.Group();
+                    landmarkGroup.position.set(ix, 0.2, iz);
+                    
+                    const addTrees = (count, maxR) => {
+                        for(let i=0; i<count; i++) {
+                            const tGeo = new THREE.CylinderGeometry(0.2, 0.2, 1, 4);
+                            const tMat = new THREE.MeshStandardMaterial({ color: 0x5c4033 });
+                            const lGeo = new THREE.ConeGeometry(1.5, 2.5, 5);
+                            const lMat = new THREE.MeshStandardMaterial({ color: 0x16a34a });
+                            const tg = new THREE.Group();
+                            const trunk = new THREE.Mesh(tGeo, tMat);
+                            trunk.position.y = 0.5;
+                            const leaves = new THREE.Mesh(lGeo, lMat);
+                            leaves.position.y = 1.5;
+                            tg.add(trunk); tg.add(leaves);
+                            
+                            let a = Math.random() * Math.PI*2;
+                            let rDist = 4 + Math.random() * (maxR - 4);
+                            tg.position.set(Math.cos(a)*rDist, 0, Math.sin(a)*rDist);
+                            tg.scale.setScalar(0.7 + Math.random()*0.6);
+                            tg.rotation.y = Math.random() * Math.PI;
+                            
+                            tg.traverse((child) => { if (child.isMesh) child.castShadow = true; });
+                            landmarkGroup.add(tg);
+                        }
+                    };
 
-                    // Perfect Bridge Math to connect edge-to-edge
-                    const bridgeStart = cityTotalSize / 2 + 0.5; // Slight overlap with main city
-                    const bridgeEnd = islandDist - islandRadius + 0.5; // Slight overlap with island
+                    const addSmallBuildings = (count, minR, maxR, islandIdx) => {
+                        for(let i=0; i<count; i++) {
+                            const seed = Math.abs(Math.sin(layoutSeedOffset + islandIdx * 100 + i * 17.3) * 43758.5453) % 1;
+                            const h = 1.5 + (seed * 11) % 4; 
+                            const cIdx = Math.floor(seed * theme.darkColors.length);
+                            const bMat = new THREE.MeshStandardMaterial({ color: theme.darkColors[cIdx] });
+                            const bld = new THREE.Mesh(new THREE.BoxGeometry(2.5, h, 2.5), bMat);
+                            bld.position.y = h/2;
+                            const a = seed * Math.PI * 2;
+                            const rDist = minR + (seed * 19) % (maxR - minR);
+                            bld.position.x = Math.cos(a) * rDist;
+                            bld.position.z = Math.sin(a) * rDist;
+                            bld.rotation.y = seed * Math.PI;
+                            bld.castShadow = true;
+                            landmarkGroup.add(bld);
+                        }
+                    };
+
+                    if (idx === 0) {
+                        // HOSPITAL
+                        const mainBldg = new THREE.Mesh(new THREE.BoxGeometry(6, 8, 6), new THREE.MeshStandardMaterial({color: 0xf8fafc}));
+                        mainBldg.position.y = 4;
+                        mainBldg.castShadow = true;
+                        landmarkGroup.add(mainBldg);
+                        
+                        const crossMat = new THREE.MeshStandardMaterial({color: 0xef4444});
+                        const vCross = new THREE.Mesh(new THREE.BoxGeometry(1, 3, 0.2), crossMat);
+                        const hCross = new THREE.Mesh(new THREE.BoxGeometry(3, 1, 0.2), crossMat);
+                        vCross.position.set(0, 6, 3.05);
+                        hCross.position.set(0, 6, 3.05);
+                        landmarkGroup.add(vCross); landmarkGroup.add(hCross);
+                        
+                        const helipad = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 0.1, 16), new THREE.MeshStandardMaterial({color: 0x334155}));
+                        helipad.position.set(0, 8.05, 0);
+                        landmarkGroup.add(helipad);
+                        
+                        addTrees(10, 14);
+                        addSmallBuildings(5, 6, 15, 0);
+                    } else if (idx === 1) {
+                        // POLICE STATION
+                        const mainBldg = new THREE.Mesh(new THREE.BoxGeometry(8, 5, 6), new THREE.MeshStandardMaterial({color: 0x1e3a8a}));
+                        mainBldg.position.y = 2.5;
+                        mainBldg.castShadow = true;
+                        landmarkGroup.add(mainBldg);
+                        
+                        const redSiren = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.4, 0.8), new THREE.MeshStandardMaterial({color: 0xef4444}));
+                        redSiren.position.set(-2, 5.2, 0);
+                        const blueSiren = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.4, 0.8), new THREE.MeshStandardMaterial({color: 0x3b82f6}));
+                        blueSiren.position.set(2, 5.2, 0);
+                        landmarkGroup.add(redSiren); landmarkGroup.add(blueSiren);
+                        
+                        for(let i=0; i<3; i++) {
+                            const car = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.6, 0.8), new THREE.MeshStandardMaterial({color: 0x0f172a}));
+                            const light = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.2, 0.4), new THREE.MeshStandardMaterial({color: 0xef4444}));
+                            light.position.y = 0.4;
+                            car.add(light);
+                            car.position.set(-3 + i*3, 0.3, 5);
+                            car.castShadow = true;
+                            landmarkGroup.add(car);
+                        }
+                        addTrees(8, 14);
+                        addSmallBuildings(4, 7, 15, 1);
+                    } else if (idx === 2) {
+                        // SCHOOL
+                        const sMat = new THREE.MeshStandardMaterial({color: 0xf59e0b}); 
+                        const wing1 = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 4), sMat);
+                        wing1.position.set(0, 2, -2);
+                        const wing2 = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 6), sMat);
+                        wing2.position.set(-3, 2, 3);
+                        wing1.castShadow = true; wing2.castShadow = true;
+                        landmarkGroup.add(wing1); landmarkGroup.add(wing2);
+                        
+                        const field = new THREE.Mesh(new THREE.BoxGeometry(6, 0.1, 5), new THREE.MeshStandardMaterial({color: 0x4ade80}));
+                        field.position.set(2, 0.05, 3);
+                        landmarkGroup.add(field);
+                        
+                        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 5), new THREE.MeshStandardMaterial({color: 0xffffff}));
+                        pole.position.set(2, 2.5, 3);
+                        const flag = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.8), new THREE.MeshStandardMaterial({color: 0xef4444}));
+                        flag.position.set(2.65, 4.5, 3);
+                        landmarkGroup.add(pole); landmarkGroup.add(flag);
+                        
+                        addTrees(12, 14);
+                        addSmallBuildings(4, 8, 16, 2);
+                    } else {
+                        // PARK
+                        const fBase = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, 0.4, 16), new THREE.MeshStandardMaterial({color: 0x94a3b8}));
+                        fBase.position.y = 0.2;
+                        const fWater = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 3.5, 0.5, 16), new THREE.MeshStandardMaterial({color: 0x3b82f6}));
+                        fWater.position.y = 0.25;
+                        const fCenter = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.2, 3, 8), new THREE.MeshStandardMaterial({color: 0xe2e8f0}));
+                        fCenter.position.y = 1.5;
+                        fBase.castShadow = true; fCenter.castShadow = true;
+                        landmarkGroup.add(fBase); landmarkGroup.add(fWater); landmarkGroup.add(fCenter);
+                        
+                        addTrees(24, 16);
+                        addSmallBuildings(3, 9, 16, 3);
+                    }
+                    
+                    envGroup.add(landmarkGroup);
+
+                    const bridgeStart = cityTotalSize / 2 + 0.5; 
+                    const bridgeEnd = islandDist - islandRadius + 0.5; 
                     const bridgeLength = bridgeEnd - bridgeStart;
                     const bridgeCenterDist = bridgeStart + bridgeLength / 2;
 
                     const bridgeGeo = new THREE.BoxGeometry(bridgeLength, 0.4, 4);
-                    const bridgeMat = new THREE.MeshStandardMaterial({ color: 0x475569 });
+                    const bridgeMat = new THREE.MeshStandardMaterial({ color: theme.accentColors[1] }); // Bridge Red
                     const bridge = new THREE.Mesh(bridgeGeo, bridgeMat);
                     bridge.position.set(Math.cos(angle) * bridgeCenterDist, -0.5, Math.sin(angle) * bridgeCenterDist);
                     bridge.rotation.y = -angle;
                     bridge.receiveShadow = true;
                     envGroup.add(bridge);
 
-                    // Bridge Cars
                     for (let i=0; i<3; i++) {
                         const isRed = Math.random() > 0.5;
-                        const carMat = new THREE.MeshStandardMaterial({ color: isRed ? 0xf43f5e : 0x3b82f6 });
+                        const carMat = new THREE.MeshStandardMaterial({ color: isRed ? theme.accentColors[0] : 0x3b82f6 });
                         const car = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.6, 0.6), carMat);
                         car.position.set((Math.random()-0.5)*bridgeLength, 0.5, isRed ? 1.0 : -1.0);
                         bridge.add(car);
@@ -817,7 +928,6 @@
                 });
 
             } else if (currentThemeKey === 'village') {
-                // Base is massive WATER extending all the way to the mountains
                 const oceanGeo = new THREE.PlaneGeometry(600, 600);
                 const oceanMat = new THREE.MeshStandardMaterial({ color: theme.waterColor, roughness: 0.1, metalness: 0.1 });
                 const ocean = new THREE.Mesh(oceanGeo, oceanMat);
@@ -826,16 +936,71 @@
                 ocean.receiveShadow = true;
                 envGroup.add(ocean);
 
-                // Inner Land (Kuning Kecoklatan) acting as a large island pad under the main city
                 const landRadius = cityTotalSize / 2 + 15;
                 const landGeo = new THREE.CylinderGeometry(landRadius, landRadius + 2, 0.5, 64);
-                const landMat = new THREE.MeshStandardMaterial({ color: 0xca8a4b, roughness: 1.0 }); 
+                const landMat = new THREE.MeshStandardMaterial({ color: theme.islandColor, roughness: 1.0 }); 
                 const land = new THREE.Mesh(landGeo, landMat);
-                land.position.set(0, -0.6, 0); // slightly above water, slightly below city plate
+                land.position.set(0, -0.6, 0); 
                 land.receiveShadow = true;
                 envGroup.add(land);
 
-                // Mountain Ring (rising straight out of the water in the distance)
+                // Menambahkan detail rumput-rumput menyebar di pulau
+                const safeZone = cityTotalSize / 2 + 1.8;
+                const grassMat = new THREE.MeshStandardMaterial({ color: 0x33691E, roughness: 1.0 });
+                for(let i=0; i<150; i++) {
+                    let gx, gz;
+                    do {
+                        const rDist = (cityTotalSize / 2) + 1 + Math.random() * 13; 
+                        const angle = Math.random() * Math.PI * 2;
+                        gx = Math.cos(angle) * rDist;
+                        gz = Math.sin(angle) * rDist;
+                    } while (Math.abs(gx) < safeZone && Math.abs(gz) < safeZone);
+                    
+                    const gGeo = new THREE.ConeGeometry(0.2 + Math.random()*0.3, 0.5 + Math.random()*0.8, 4);
+                    const grass = new THREE.Mesh(gGeo, grassMat);
+                    grass.position.set(gx, -0.35, gz);
+                    grass.rotation.y = Math.random() * Math.PI;
+                    grass.rotation.x = (Math.random() - 0.5) * 0.4;
+                    grass.rotation.z = (Math.random() - 0.5) * 0.4;
+                    grass.castShadow = true;
+                    envGroup.add(grass);
+                }
+
+                // Menambahkan pohon-pohon di luar area QR
+                const trunkGeo = new THREE.CylinderGeometry(0.2, 0.3, 1.0, 5);
+                const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4E342E, roughness: 1.0 });
+                const leavesGeo = new THREE.ConeGeometry(1.2, 2.5, 5);
+                const leavesMat = new THREE.MeshStandardMaterial({ color: 0x1E3F20, roughness: 0.8 }); // Deep Moss
+                
+                for(let i=0; i<45; i++) {
+                    let tx, tz;
+                    do {
+                        const rDist = (cityTotalSize / 2) + 1.5 + Math.random() * 12; 
+                        const angle = Math.random() * Math.PI * 2;
+                        tx = Math.cos(angle) * rDist;
+                        tz = Math.sin(angle) * rDist;
+                    } while (Math.abs(tx) < safeZone && Math.abs(tz) < safeZone);
+                    
+                    const tree = new THREE.Group();
+                    
+                    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+                    trunk.position.y = 0.5;
+                    trunk.castShadow = true;
+                    tree.add(trunk);
+                    
+                    const leaves = new THREE.Mesh(leavesGeo, leavesMat);
+                    leaves.position.y = 1.8;
+                    leaves.castShadow = true;
+                    tree.add(leaves);
+                    
+                    const scale = 0.6 + Math.random() * 0.8;
+                    tree.scale.set(scale, scale, scale);
+                    tree.position.set(tx, -0.6, tz);
+                    tree.rotation.y = Math.random() * Math.PI;
+                    
+                    envGroup.add(tree);
+                }
+
                 const mtnCount = 24;
                 const mtnRadius = cityTotalSize / 2 + 45;
                 for(let i=0; i<mtnCount; i++) {
@@ -843,7 +1008,7 @@
                     const h = 15 + Math.random()*30;
                     const r = 12 + Math.random()*10;
                     const mtnGeo = new THREE.ConeGeometry(r, h, 6);
-                    const mtnMat = new THREE.MeshStandardMaterial({ color: theme.islandColor, roughness: 0.9 });
+                    const mtnMat = new THREE.MeshStandardMaterial({ color: 0x2C3E2D, roughness: 0.9 });
                     const mtn = new THREE.Mesh(mtnGeo, mtnMat);
                     mtn.position.set(Math.cos(angle)*mtnRadius, h/2 - 0.8, Math.sin(angle)*mtnRadius);
                     mtn.receiveShadow = true;
@@ -862,20 +1027,18 @@
                 }
 
             } else if (currentThemeKey === 'cyberpunk') {
-                // Cyber-Abyss Floor
                 const abyssGeo = new THREE.PlaneGeometry(600, 600);
-                const abyssMat = new THREE.MeshStandardMaterial({ color: 0x020617, roughness: 0.5 });
+                const abyssMat = new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.5 });
                 const abyss = new THREE.Mesh(abyssGeo, abyssMat);
                 abyss.rotation.x = -Math.PI / 2;
-                abyss.position.y = -50; // Deep bottomless feel
+                abyss.position.y = -50; 
                 envGroup.add(abyss);
 
-                // Hologram Landing Pads (Multiplied color to trigger Bloom)
                 for(let i=0; i<6; i++) {
                     const angle = (i/6)*Math.PI*2 + Math.PI/6;
-                    const dist = cityTotalSize/2 + 30 + Math.random()*25; // Lebih jauh dari permukaan utama
+                    const dist = cityTotalSize/2 + 30 + Math.random()*25; 
                     const padGeo = new THREE.RingGeometry(6, 7.5, 32);
-                    const neonColor = theme.neonColors[i % theme.neonColors.length];
+                    const neonColor = theme.accentColors[i % theme.accentColors.length];
                     const padMat = new THREE.MeshBasicMaterial({ 
                         color: new THREE.Color(neonColor).multiplyScalar(2.5), 
                         side: THREE.DoubleSide 
@@ -886,10 +1049,9 @@
                     envGroup.add(pad);
                 }
 
-                // Data Streams (Motherboard Circuits out into the abyss)
                 for(let i=0; i<30; i++) {
                     const streamGeo = new THREE.BoxGeometry(0.4, 0.2, 10 + Math.random()*30);
-                    const neonColor = theme.neonColors[Math.floor(Math.random()*theme.neonColors.length)];
+                    const neonColor = theme.accentColors[Math.floor(Math.random()*theme.accentColors.length)];
                     const streamMat = new THREE.MeshBasicMaterial({ 
                         color: new THREE.Color(neonColor).multiplyScalar(2.0) 
                     });
@@ -902,9 +1064,8 @@
                     envGroup.add(stream);
                 }
 
-                // Hovercars (Below city level)
                 for(let i=0; i<35; i++) {
-                    const neonColor = theme.neonColors[Math.floor(Math.random()*theme.neonColors.length)];
+                    const neonColor = theme.accentColors[Math.floor(Math.random()*theme.accentColors.length)];
                     const neonMat = new THREE.MeshBasicMaterial({ 
                         color: new THREE.Color(neonColor).multiplyScalar(2.5) 
                     });
@@ -958,6 +1119,28 @@
             }
         }
 
+        function isFinderCore(r, c) {
+            if (r >= 2 && r <= 4 && c >= 2 && c <= 4) return true;
+            if (r >= 2 && r <= 4 && c >= gridCount - 5 && c <= gridCount - 3) return true;
+            if (r >= gridCount - 5 && r <= gridCount - 3 && c >= 2 && c <= 4) return true;
+            return false;
+        }
+
+        function createBarnGateTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#3E2723'; 
+            ctx.fillRect(0, 0, 64, 64);
+            ctx.strokeStyle = '#ffffff'; 
+            ctx.lineWidth = 6;
+            ctx.strokeRect(4, 4, 56, 56);
+            ctx.beginPath(); ctx.moveTo(4,4); ctx.lineTo(60,60); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(60,4); ctx.lineTo(4,60); ctx.stroke();
+            return new THREE.CanvasTexture(canvas);
+        }
+
         function buildCityMesh() {
             disposeGroup(cityGroup);
 
@@ -969,7 +1152,6 @@
             buildOuterEnvironment(totalSize);
             createClouds();
 
-            // Base City Ground Plate (Diperluas untuk Cyberpunk)
             const basePadding = currentThemeKey === 'cyberpunk' ? 5 : 2;
             const borderPadding = currentThemeKey === 'cyberpunk' ? 5.6 : 2.4;
             
@@ -977,9 +1159,8 @@
             
             let groundMat;
             if (currentThemeKey === 'cyberpunk') {
-                const topMat = new THREE.MeshStandardMaterial({ color: theme.groundColor, roughness: 0.8 });
+                const topMat = new THREE.MeshStandardMaterial({ color: theme.lightColors[0], roughness: 0.8 });
                 const blackMat = new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.8 });
-                // THREE.BoxGeometry material index: [Right, Left, Top, Bottom, Front, Back]
                 groundMat = [blackMat, blackMat, topMat, blackMat, blackMat, blackMat];
             } else {
                 groundMat = new THREE.MeshStandardMaterial({ color: theme.groundColor, roughness: 0.8 });
@@ -997,14 +1178,13 @@
             borderMesh.position.set(0, -0.9, 0);
             cityGroup.add(borderMesh);
 
-            // --- CYBERPUNK EDGE NEON ---
             if (currentThemeKey === 'cyberpunk') {
-                const edgeNeonMat1 = new THREE.MeshBasicMaterial({ color: new THREE.Color(0x06b6d4).multiplyScalar(4.0) }); 
-                const edgeNeonMat2 = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xf43f5e).multiplyScalar(4.0) }); 
+                const edgeNeonMat1 = new THREE.MeshBasicMaterial({ color: new THREE.Color(theme.accentColors[0]).multiplyScalar(4.0) }); 
+                const edgeNeonMat2 = new THREE.MeshBasicMaterial({ color: new THREE.Color(theme.accentColors[1]).multiplyScalar(4.0) }); 
                 const L = totalSize + basePadding;
                 const count = Math.floor(L / 2.5); 
-                const yPos = -0.55; // Posisi vertikal di tengah dinding alas
-                const zFightOffset = L/2 + 0.05; // Menonjol sedikit keluar dari dinding
+                const yPos = -0.55; 
+                const zFightOffset = L/2 + 0.05; 
                 
                 for (let side = 0; side < 4; side++) {
                     for (let i = 0; i < count; i++) {
@@ -1015,14 +1195,14 @@
                         
                         const nodeOffset = -L/2 + (i + 0.5) * (L / count);
                         
-                        if (side === 0) { // Utara
+                        if (side === 0) {
                             node.position.set(nodeOffset, yPos, -zFightOffset);
-                        } else if (side === 1) { // Selatan
+                        } else if (side === 1) {
                             node.position.set(nodeOffset, yPos, zFightOffset);
-                        } else if (side === 2) { // Timur
+                        } else if (side === 2) {
                             node.rotation.y = Math.PI / 2;
                             node.position.set(zFightOffset, yPos, nodeOffset);
-                        } else if (side === 3) { // Barat
+                        } else if (side === 3) {
                             node.rotation.y = Math.PI / 2;
                             node.position.set(-zFightOffset, yPos, nodeOffset);
                         }
@@ -1032,17 +1212,17 @@
                     }
                 }
             }
-            // -----------------------------
 
             const windowTextures = [];
             if (currentThemeKey !== 'village') {
-                theme.wallColors.forEach(color => {
+                theme.darkColors.forEach(color => {
                     windowTextures.push(createThemeWindowTexture(color, theme.windowColor));
                 });
             }
 
-            const pureBlackRoofMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-            roadTextureCache = createRoadTexture(theme);
+            const roadTextures = theme.lightColors.map(color => createRoadTexture(theme, color));
+            const barnColors = [0x990000, 0x1E88E5, 0x7A0000]; // Merah pekat, Biru, Merah marun pekat
+            const globalColorOffset = Math.floor(layoutSeedOffset) % 3;
 
             function isFinderPattern(r, c) {
                 if (r < 7 && c < 7) return true;
@@ -1061,16 +1241,27 @@
 
                     if (val === 1) {
                         const isFinder = isFinderPattern(r, c);
+                        const isCore = isFinderCore(r, c);
                         const bSize = cellSize;
                         const buildingGroup = new THREE.Group();
 
-                        const colorIdx = Math.floor(seed * theme.wallColors.length);
-                        const wallColorHex = theme.wallColors[colorIdx];
+                        let colorIdx = Math.floor(seed * theme.darkColors.length);
+                        let darkColorHex = theme.darkColors[colorIdx];
+                        let roofColorHex = darkColorHex;
+                        
+                        if (currentThemeKey === 'village' && isFinder) {
+                            const cornerIdx = (r < 7 && c < 7) ? 0 : (c >= gridCount - 7 ? 1 : 2);
+                            darkColorHex = barnColors[(cornerIdx + globalColorOffset) % 3]; 
+                            roofColorHex = 0x000000; // Black Roof
+                        }
+
                         const wallMat = new THREE.MeshStandardMaterial({ 
-                            color: wallColorHex, 
+                            color: darkColorHex, 
                             roughness: 0.6,
-                            map: currentThemeKey !== 'village' ? windowTextures[colorIdx] : null
+                            map: (currentThemeKey !== 'village') ? windowTextures[colorIdx] : null
                         });
+
+                        const roofMat = new THREE.MeshBasicMaterial({ color: roofColorHex });
 
                         if (currentThemeKey === 'metropolis') {
                             const h = isFinder ? 2.5 : (1.0 + seed * 3.5);
@@ -1080,26 +1271,54 @@
                             body.receiveShadow = true;
                             buildingGroup.add(body);
 
-                            const roofCap = new THREE.Mesh(new THREE.BoxGeometry(bSize, 0.05, bSize), pureBlackRoofMat);
+                            const roofCap = new THREE.Mesh(new THREE.BoxGeometry(bSize, 0.05, bSize), roofMat);
                             roofCap.position.y = h + 0.025;
                             buildingGroup.add(roofCap);
 
                         } else if (currentThemeKey === 'village') {
-                            const h = isFinder ? 1.0 : (0.4 + seed * 0.6);
-                            const body = new THREE.Mesh(new THREE.BoxGeometry(bSize * 0.85, h, bSize * 0.85), wallMat);
-                            body.position.y = h / 2;
-                            body.castShadow = true;
-                            body.receiveShadow = true;
-                            buildingGroup.add(body);
+                            if (isFinder) {
+                                const h = isCore ? 1.4 : 0.8;
+                                const body = new THREE.Mesh(new THREE.BoxGeometry(bSize * 0.95, h, bSize * 0.95), wallMat);
+                                body.position.y = h / 2;
+                                body.castShadow = true;
+                                body.receiveShadow = true;
+                                buildingGroup.add(body);
 
-                            const roofGeo = new THREE.ConeGeometry(bSize / Math.sqrt(2), 0.6, 4);
-                            const roof = new THREE.Mesh(roofGeo, pureBlackRoofMat);
-                            roof.position.y = h + 0.3;
-                            roof.rotation.y = Math.PI / 4;
-                            buildingGroup.add(roof);
+                                if (isCore) {
+                                    if (!window.gateTexCache) window.gateTexCache = createBarnGateTexture();
+                                    const gateMat = new THREE.MeshStandardMaterial({ map: window.gateTexCache });
+                                    const gateGeo = new THREE.PlaneGeometry(bSize * 0.6, bSize * 0.6);
+                                    const offsetGate = bSize * 0.48;
+                                    const gY = (bSize * 0.6) / 2 + 0.05;
+                                    
+                                    const g1 = new THREE.Mesh(gateGeo, gateMat); g1.position.set(0, gY, offsetGate); buildingGroup.add(g1);
+                                    const g2 = new THREE.Mesh(gateGeo, gateMat); g2.position.set(0, gY, -offsetGate); g2.rotation.y = Math.PI; buildingGroup.add(g2);
+                                    const g3 = new THREE.Mesh(gateGeo, gateMat); g3.position.set(offsetGate, gY, 0); g3.rotation.y = Math.PI/2; buildingGroup.add(g3);
+                                    const g4 = new THREE.Mesh(gateGeo, gateMat); g4.position.set(-offsetGate, gY, 0); g4.rotation.y = -Math.PI/2; buildingGroup.add(g4);
+                                }
+
+                                const roofGeo = new THREE.ConeGeometry((bSize * 0.95) / Math.sqrt(2), 0.6, 4);
+                                const roof = new THREE.Mesh(roofGeo, roofMat);
+                                roof.position.y = h + 0.3;
+                                roof.rotation.y = Math.PI / 4;
+                                buildingGroup.add(roof);
+
+                            } else {
+                                const h = 0.4 + seed * 0.6;
+                                const body = new THREE.Mesh(new THREE.BoxGeometry(bSize * 0.85, h, bSize * 0.85), wallMat);
+                                body.position.y = h / 2;
+                                body.castShadow = true;
+                                body.receiveShadow = true;
+                                buildingGroup.add(body);
+
+                                const roofGeo = new THREE.ConeGeometry((bSize * 0.85) / Math.sqrt(2), 0.6, 4);
+                                const roof = new THREE.Mesh(roofGeo, roofMat);
+                                roof.position.y = h + 0.3;
+                                roof.rotation.y = Math.PI / 4;
+                                buildingGroup.add(roof);
+                            }
 
                         } else {
-                            // Cyberpunk Motherboard Server Blocks
                             const h = isFinder ? 3.0 : (1.2 + seed * 4.5);
                             const bodySize = bSize * 0.9;
                             
@@ -1108,23 +1327,20 @@
                             core.castShadow = true;
                             buildingGroup.add(core);
 
-                            // Multiply neon colors so they exceed bloom threshold
-                            const neonColorHex = theme.neonColors[Math.floor(seed * 100) % theme.neonColors.length];
+                            const neonColorHex = theme.accentColors[Math.floor(seed * 100) % theme.accentColors.length];
                             const neonMat = new THREE.MeshBasicMaterial({ 
                                 color: new THREE.Color(neonColorHex).multiplyScalar(2.5) 
                             });
                             
-                            // Horizontal neon ring
                             const hStrip = new THREE.Mesh(new THREE.BoxGeometry(bodySize * 1.02, 0.1, bodySize * 1.02), neonMat);
                             hStrip.position.y = h * (0.3 + (seed % 0.5));
                             buildingGroup.add(hStrip);
 
-                            // Vertical neon stripe
                             const vStrip = new THREE.Mesh(new THREE.BoxGeometry(0.1, h, bodySize * 1.02), neonMat);
                             vStrip.position.set((seed > 0.5 ? 0.3 : -0.3), h/2, 0);
                             buildingGroup.add(vStrip);
 
-                            const roofCap = new THREE.Mesh(new THREE.BoxGeometry(bSize, 0.05, bSize), pureBlackRoofMat);
+                            const roofCap = new THREE.Mesh(new THREE.BoxGeometry(bSize, 0.05, bSize), roofMat);
                             roofCap.position.y = h + 0.025;
                             buildingGroup.add(roofCap);
                         }
@@ -1135,14 +1351,14 @@
                         cityGroup.add(buildingGroup);
 
                     } else {
-                        // QR MODULE 0: Roads & Empty Spaces
+                        const colorIdx = Math.floor(seed * theme.lightColors.length);
+                        const lightColorHex = theme.lightColors[colorIdx];
+
                         const roadGeo = new THREE.BoxGeometry(cellSize - 0.05, 0.04, cellSize - 0.05);
-                        
-                        // Using a plain matte standard material to prevent the floor from blooming and causing glare
                         const roadMat = new THREE.MeshStandardMaterial({ 
-                            color: theme.roadColor, 
+                            color: lightColorHex, 
                             roughness: 0.8, 
-                            map: roadTextureCache 
+                            map: roadTextures[colorIdx] 
                         });
 
                         const roadTile = new THREE.Mesh(roadGeo, roadMat);
@@ -1156,15 +1372,23 @@
                                 const treeGroup = new THREE.Group();
                                 const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.1, 0.5, 6), new THREE.MeshStandardMaterial({ color: 0x5c4033 }));
                                 trunk.position.y = 0.25;
-                                const leaves = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.9, 6), new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.7 }));
+                                const leaves = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.9, 6), new THREE.MeshStandardMaterial({ color: theme.lightColors[1], roughness: 0.7 }));
                                 leaves.position.y = 0.75;
                                 treeGroup.add(trunk);
                                 treeGroup.add(leaves);
                                 treeGroup.position.set(x + (seed - 0.85) * 0.4, 0, z + (seed - 0.85) * 0.4);
                                 treeGroup.scale.set(0.8, 0.8, 0.8);
                                 cityGroup.add(treeGroup);
+                            } else if (currentThemeKey === 'village' && seed > 0.85) {
+                                const barnGeo = new THREE.BoxGeometry(0.6, 0.4, 0.4);
+                                const accentBarnColor = barnColors[Math.floor((seed * 100) % 3)];
+                                const barnMat = new THREE.MeshStandardMaterial({ color: accentBarnColor });
+                                const barn = new THREE.Mesh(barnGeo, barnMat);
+                                barn.position.set(x, 0.2, z);
+                                barn.rotation.y = Math.random() * Math.PI;
+                                barn.castShadow = true;
+                                cityGroup.add(barn);
                             }
-                            // Village animals have been completely removed as requested
                         }
                     }
                 }
@@ -1192,22 +1416,22 @@
             return texture;
         }
 
-        function createRoadTexture(theme) {
+        function createRoadTexture(theme, hexColor) {
             const canvas = document.createElement('canvas');
             canvas.width = 64;
             canvas.height = 64;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#' + theme.roadColor.toString(16).padStart(6, '0');
+            ctx.fillStyle = '#' + hexColor.toString(16).padStart(6, '0');
             ctx.fillRect(0, 0, 64, 64);
 
-            if (currentThemeKey === 'cyberpunk') {
-                ctx.strokeStyle = '#06b6d4'; // Cyan neon strokes on matte base
+            if (theme.name === 'Cyberpunk') {
+                ctx.strokeStyle = '#' + theme.accentColors[1].toString(16).padStart(6, '0'); 
                 ctx.lineWidth = 2;
                 ctx.strokeRect(0, 0, 64, 64);
                 ctx.strokeRect(16, 16, 32, 32);
                 ctx.beginPath(); ctx.moveTo(32,0); ctx.lineTo(32,64); ctx.stroke();
                 ctx.beginPath(); ctx.moveTo(0,32); ctx.lineTo(64,32); ctx.stroke();
-            } else if (currentThemeKey === 'metropolis') {
+            } else if (theme.name === 'Metropolis') {
                 ctx.strokeStyle = 'rgba(0, 0, 0, 0.06)';
                 ctx.lineWidth = 4;
                 ctx.strokeRect(0, 0, 64, 64);
@@ -1244,7 +1468,6 @@
 
             applyThemeLighting();
 
-            // Hide edge neon to ensure it never ruins the top-down QR matrix
             if (currentThemeKey === 'cyberpunk') {
                 cityGroup.children.forEach(child => {
                     if (child.userData && child.userData.isEdgeNeon) {
@@ -1293,14 +1516,12 @@
             window.addEventListener('resize', onWindowResize);
             document.getElementById('btn-generate').addEventListener('click', () => { generateQRCity(); });
             
-            // DOWNLOAD BUTTON - Auto Snap Top-Down
             document.getElementById('btn-download').addEventListener('click', () => {
                 const wasScanMode = isScanMode;
                 const origPos = camera.position.clone();
                 const origQuat = camera.quaternion.clone();
                 const origTarget = controls.target.clone();
 
-                // 1. Instantly switch to perfect top-down view
                 isScanMode = true;
                 const totalCitySize = gridCount * 1.6;
                 let targetY = (totalCitySize * 1.35 / 2) / Math.tan(42 * Math.PI / 360);
@@ -1310,20 +1531,17 @@
                 controls.target.set(0, 0, 0);
                 camera.lookAt(0, 0, 0);
                 
-                // 2. Apply scanner-friendly lighting & hide clouds
                 applyThemeLighting();
                 cloudsGroup.visible = false;
                 if (currentThemeKey === 'cyberpunk') {
                     cityGroup.children.forEach(c => { if (c.userData && c.userData.isEdgeNeon) c.visible = false; });
                 }
                 
-                // 3. Render and extract image
                 if (composer && currentThemeKey === 'cyberpunk') composer.render();
                 else renderer.render(scene, camera);
                 
                 const dataURL = renderer.domElement.toDataURL('image/png');
                 
-                // 4. Restore original state completely
                 isScanMode = wasScanMode;
                 camera.position.copy(origPos);
                 camera.quaternion.copy(origQuat);
@@ -1338,7 +1556,6 @@
                 if (composer && currentThemeKey === 'cyberpunk') composer.render();
                 else renderer.render(scene, camera);
                 
-                // 5. Trigger download
                 const link = document.createElement('a');
                 link.download = 'Build-QR-City.png';
                 link.href = dataURL;
@@ -1352,6 +1569,12 @@
             });
             document.getElementById('btn-regenerate').addEventListener('click', () => {
                 layoutSeedOffset = Math.random() * 10000;
+                
+                const theme = THEMES[currentThemeKey];
+                theme.darkColors.sort(() => Math.random() - 0.5);
+                theme.lightColors.sort(() => Math.random() - 0.5);
+                // accentColors tidak diacak agar warna elemen spesifik (jembatan, mobil) konsisten
+                
                 buildCityMesh();
             });
             document.getElementById('panel-toggle').addEventListener('click', () => {
