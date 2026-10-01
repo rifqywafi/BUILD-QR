@@ -92,7 +92,7 @@
             margin-top: 20px;
             transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin-top 0.3s ease;
             overflow: hidden;
-            max-height: 800px; /* Cukup besar untuk menampung konten */
+            max-height: 800px;
             opacity: 1;
         }
 
@@ -425,45 +425,52 @@
 
             <div id="panel-content">
                 <div class="input-group">
-                <label class="input-label" for="qr-text">Teks / URL QR Code</label>
-                <div class="input-wrapper">
-                    <i class="fa-solid fa-link"></i>
-                    <input type="text" id="qr-text" class="qr-input" value="https://google.com" placeholder="Masukkan Teks atau URL..." autocomplete="off">
+                    <label class="input-label" for="qr-text">Teks / URL QR Code</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-link"></i>
+                        <input type="text" id="qr-text" class="qr-input" value="https://cityqr-zeta.vercel.app/" placeholder="Masukkan Teks atau URL..." autocomplete="off">
+                    </div>
                 </div>
-            </div>
 
-            <div class="preset-tags">
-                <button class="tag-btn" onclick="setPreset('https://google.com')">Google</button>
-                <button class="tag-btn" onclick="setPreset('https://github.com')">GitHub</button>
-                <button class="tag-btn" onclick="setPreset('Halo Dunia! 3D QR Theme')">Greeting</button>
-                <button class="tag-btn" onclick="setPreset('WIFI:S:MyHomeWifi;T:WPA;P:Secret123;;')">WiFi</button>
-            </div>
-
-            <button id="btn-generate" class="btn-primary">
-                <i class="fa-solid fa-wand-magic-sparkles"></i>
-                Generate QR City
-            </button>
-
-            <div class="options-grid">
-                <div>
-                    <label class="input-label">Pilih Tema</label>
-                    <select id="theme-select" class="option-select">
-                        <option value="metropolis">Metropolis (Modern)</option>
-                        <option value="village">Village (Pedesaan)</option>
-                        <option value="cyberpunk">Cyberpunk (Sci-Fi Neon)</option>
-                    </select>
+                <div class="preset-tags">
+                    <button class="tag-btn" onclick="setPreset('https://google.com')">Google</button>
+                    <button class="tag-btn" onclick="setPreset('https://github.com')">GitHub</button>
+                    <button class="tag-btn" onclick="setPreset('Hello World!')">Greeting</button>
+                    <button class="tag-btn" onclick="setPreset('WIFI:S:MyHomeWifi;T:WPA;P:Secret123;;')">WiFi</button>
+                    <button class="tag-btn" onclick="setPreset('d3b07384-d113-4315-992a-302b11562b8a')">UUID</button>
                 </div>
-                <div>
-                    <label class="input-label">Variasi Bangunan</label>
-                    <button id="btn-regenerate" class="btn-secondary">
-                        <i class="fa-solid fa-dice"></i> Acak Tata Letak
+
+                <div style="display: flex; gap: 10px;">
+                    <button id="btn-generate" class="btn-primary" style="flex: 1.5;">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        Generate
+                    </button>
+                    <button id="btn-download" class="btn-primary" style="flex: 1; background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 8px 22px rgba(16, 185, 129, 0.4);" title="Download QR">
+                        <i class="fa-solid fa-download"></i>
+                        Download
                     </button>
                 </div>
-            </div>
 
-            <div id="grid-info-badge" class="info-badge">
-                <i class="fa-solid fa-border-all"></i> Matrix: 21 × 21 Grid
-            </div>
+                <div class="options-grid">
+                    <div>
+                        <label class="input-label">Pilih Tema</label>
+                        <select id="theme-select" class="option-select">
+                            <option value="metropolis">Metropolis (Modern)</option>
+                            <option value="village">Village (Pedesaan)</option>
+                            <option value="cyberpunk">Cyberpunk (Sci-Fi Neon)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="input-label">Variasi Bangunan</label>
+                        <button id="btn-regenerate" class="btn-secondary">
+                            <i class="fa-solid fa-dice"></i> Acak Tata Letak
+                        </button>
+                    </div>
+                </div>
+
+                <div id="grid-info-badge" class="info-badge">
+                    <i class="fa-solid fa-border-all"></i> Matrix: 21 × 21 Grid
+                </div>
             </div> <!-- End panel-content -->
         </div>
 
@@ -471,7 +478,7 @@
         <div class="bottom-bar">
             <div class="hint-pill" id="hint-pill">
                 <i class="fa-solid fa-computer-mouse"></i>
-                <span>Klik area 3D untuk Scan Mode (Top View)</span>
+                <span>Gunakan mouse untuk memutar kota 3D</span>
             </div>
         </div>
 
@@ -489,8 +496,16 @@
     <!-- CDN Libraries -->
     <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- OrbitControls -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <!-- Post Processing for Cyberpunk Neon Bloom -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
     <!-- GSAP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <!-- QR Code Generator Library -->
@@ -500,22 +515,23 @@
         /* ----------------------------------------------------
            APPLICATION STATE & THEME CONFIGURATION
         ---------------------------------------------------- */
-        let scene, camera, renderer, controls;
+        let scene, camera, renderer, controls, composer, bloomPass;
         let cityGroup = new THREE.Group();
         let envGroup = new THREE.Group();
         let cloudsGroup = new THREE.Group();
+        
+        let animatedObjects = [];
+        let roadTextureCache = null;
 
         let currentQRMatrix = null;
         let isScanMode = false;
         let isAnimatingCamera = false;
         let gridCount = 21;
-        let layoutSeedOffset = 0; // Digunakan untuk tombol "Acak Tata Letak"
+        let layoutSeedOffset = 0; 
 
-        // Lighting References
         let mainSunLight, ambientLight, hemiLight;
         let cyberpunkLights = [];
 
-        // Camera Default Isometric Configuration
         const ISO_CAM_POS = { x: 50, y: 60, z: 50 };
         const CAM_LOOK_AT = { x: 0, y: 0, z: 0 };
 
@@ -523,12 +539,12 @@
         const THEMES = {
             metropolis: {
                 name: 'Metropolis',
-                wallColors: [0x334155, 0x475569, 0x1e293b, 0x64748b, 0x94a3b8], // Modern concrete & glass
+                wallColors: [0x334155, 0x475569, 0x1e293b, 0x64748b, 0x94a3b8],
                 windowColor: 0xe2e8f0,
-                groundColor: 0xffffff,
-                roadColor: 0xe2e8f0,
-                waterColor: 0x38bdf8,
-                islandColor: 0xa7f3d0,
+                groundColor: 0x86efac, 
+                roadColor: 0x94a3b8,   
+                waterColor: 0x0ea5e9,  
+                islandColor: 0x22c55e, // Lebih hijau pekat (Vibrant Green)
                 skyColor: 0xbae6fd,
                 fogColor: 0xdbeafe,
                 sunColor: 0xfffaed,
@@ -537,12 +553,12 @@
             },
             village: {
                 name: 'Village',
-                wallColors: [0x92400e, 0x78350f, 0x991b1b, 0x78716c, 0xb45309, 0x57534e], // Kayu gelap, bata merah, batu alam
+                wallColors: [0x92400e, 0x78350f, 0x991b1b, 0x78716c, 0xb45309, 0x57534e], 
                 windowColor: 0xfef08a,
-                groundColor: 0xf8fafc,
-                roadColor: 0xfef3c7,
-                waterColor: 0x0284c7,
-                islandColor: 0xdcfce7,
+                groundColor: 0xffffff, // White inner city base for QR
+                roadColor: 0xffffff,   // White inner roads for QR
+                waterColor: 0x2563eb,  // Solid rich blue
+                islandColor: 0x4d7c0f, 
                 skyColor: 0xfed7aa,
                 fogColor: 0xffedd5,
                 sunColor: 0xffedd5,
@@ -551,18 +567,18 @@
             },
             cyberpunk: {
                 name: 'Cyberpunk',
-                wallColors: [0x1e1b4b, 0x0f172a, 0x312e81, 0x111827], // Dark cyber metals
-                neonColors: [0x06b6d4, 0xf43f5e, 0xa855f7, 0x3b82f6, 0x10b981], // Emissive neons
+                wallColors: [0x0f172a, 0x1e1b4b, 0x000000], 
+                neonColors: [0x06b6d4, 0xf43f5e, 0xfacc15], // Cyan, Magenta, Yellow
                 windowColor: 0x06b6d4,
-                groundColor: 0xffffff,
-                roadColor: 0xe0e7ff,
+                groundColor: 0xe2e8f0, // Soft matte white/gray base
+                roadColor: 0xe2e8f0,   // Soft matte white/gray road
                 waterColor: 0x4c1d95,
                 islandColor: 0x1e1b4b,
-                skyColor: 0x090d16,
-                fogColor: 0x1e1b4b,
+                skyColor: 0x000000,
+                fogColor: 0x000000,
                 sunColor: 0x06b6d4,
                 ambientIntensity: 0.5,
-                sunIntensity: 0.9
+                sunIntensity: 0.5
             }
         };
 
@@ -584,16 +600,13 @@
         function initThreeJS() {
             const container = document.getElementById('webgl-container');
 
-            // 1. Scene
             scene = new THREE.Scene();
             updateAtmosphere();
 
-            // 2. Camera
-            camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 2500);
+            camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 15000);
             camera.position.set(ISO_CAM_POS.x, ISO_CAM_POS.y, ISO_CAM_POS.z);
 
-            // 3. Renderer
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance', preserveDrawingBuffer: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.shadowMap.enabled = true;
@@ -601,19 +614,27 @@
             renderer.outputEncoding = THREE.sRGBEncoding;
             container.appendChild(renderer.domElement);
 
-            // 4. Controls
+            // Postprocessing setup for Cyberpunk Neon Bloom
+            const renderScene = new THREE.RenderPass(scene, camera);
+            bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+            bloomPass.threshold = 1.0; 
+            bloomPass.strength = 0; // Disabled by default
+            bloomPass.radius = 0.8;
+
+            composer = new THREE.EffectComposer(renderer);
+            composer.addPass(renderScene);
+            composer.addPass(bloomPass);
+
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
             controls.maxPolarAngle = Math.PI / 2 - 0.02;
             controls.minDistance = 10;
-            controls.maxDistance = 1500;
+            controls.maxDistance = 200; // Batasi zoom out maks ~2x dari native (native distance ~93)
             controls.target.set(0, 0, 0);
 
-            // 5. Lighting Setup
             setupLighting();
 
-            // 6. Groups
             scene.add(envGroup);
             scene.add(cityGroup);
             scene.add(cloudsGroup);
@@ -624,13 +645,16 @@
         function updateAtmosphere() {
             const theme = THEMES[currentThemeKey];
             
-            // In Cyberpunk Scan Mode, brighten background fog for scan contrast
-            if (currentThemeKey === 'cyberpunk' && isScanMode) {
-                scene.background = new THREE.Color(0x0f172a);
-                scene.fog = new THREE.FogExp2(0x0f172a, 0.003);
+            if (isScanMode) {
+                scene.fog = null;
+                scene.background = new THREE.Color(theme.skyColor);
             } else {
                 scene.background = new THREE.Color(theme.skyColor);
-                scene.fog = new THREE.FogExp2(theme.fogColor, 0.005);
+                if (currentThemeKey === 'cyberpunk') {
+                    scene.fog = new THREE.FogExp2(0x000000, 0.008);
+                } else {
+                    scene.fog = new THREE.FogExp2(theme.fogColor, 0.005);
+                }
             }
         }
 
@@ -665,6 +689,12 @@
             const theme = THEMES[currentThemeKey];
             updateAtmosphere();
 
+            if (currentThemeKey === 'cyberpunk') {
+                bloomPass.strength = isScanMode ? 0.0 : 1.6; 
+            } else {
+                bloomPass.strength = 0.0;
+            }
+
             if (isScanMode && currentThemeKey === 'cyberpunk') {
                 ambientLight.intensity = 1.0;
                 mainSunLight.intensity = 1.4;
@@ -679,39 +709,30 @@
             cyberpunkLights = [];
 
             if (currentThemeKey === 'cyberpunk' && !isScanMode) {
-                const cyanLight = new THREE.PointLight(0x06b6d4, 2.5, 90);
+                const cyanLight = new THREE.PointLight(0x06b6d4, 2.5, 120);
                 cyanLight.position.set(25, 20, 25);
                 scene.add(cyanLight);
                 cyberpunkLights.push(cyanLight);
 
-                const magentaLight = new THREE.PointLight(0xf43f5e, 2.5, 90);
+                const magentaLight = new THREE.PointLight(0xf43f5e, 2.5, 120);
                 magentaLight.position.set(-25, 20, -25);
                 scene.add(magentaLight);
                 cyberpunkLights.push(magentaLight);
             }
         }
 
-        /* ----------------------------------------------------
-           DRIFTING LOW-POLY CLOUDS
-        ---------------------------------------------------- */
         function createClouds() {
-            while (cloudsGroup.children.length > 0) {
-                const c = cloudsGroup.children[0];
-                if (c.geometry) c.geometry.dispose();
-                cloudsGroup.remove(c);
-            }
-
+            disposeGroup(cloudsGroup);
             const cloudMat = new THREE.MeshStandardMaterial({
-                color: currentThemeKey === 'village' ? 0xffedd5 : (currentThemeKey === 'cyberpunk' ? 0xc084fc : 0xffffff),
+                color: currentThemeKey === 'village' ? 0xffedd5 : (currentThemeKey === 'cyberpunk' ? 0x1e1b4b : 0xffffff),
                 roughness: 0.9,
                 transparent: true,
-                opacity: 0.85
+                opacity: currentThemeKey === 'cyberpunk' ? 0.4 : 0.85
             });
 
             for (let i = 0; i < 16; i++) {
                 const cloud = new THREE.Group();
                 const numPuffs = 4 + Math.floor(Math.random() * 4);
-
                 for (let j = 0; j < numPuffs; j++) {
                     const r = 3 + Math.random() * 4;
                     const puff = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 1), cloudMat);
@@ -719,7 +740,6 @@
                     puff.castShadow = true;
                     cloud.add(puff);
                 }
-
                 const angle = Math.random() * Math.PI * 2;
                 const dist = 70 + Math.random() * 80;
                 cloud.position.set(Math.cos(angle) * dist, 30 + Math.random() * 20, Math.sin(angle) * dist);
@@ -729,93 +749,194 @@
         }
 
         /* ----------------------------------------------------
-           OUTER ENVIRONMENT (NO CARS)
+           OUTER ENVIRONMENT
         ---------------------------------------------------- */
         function buildOuterEnvironment(cityTotalSize) {
-            while (envGroup.children.length > 0) {
-                const child = envGroup.children[0];
-                child.traverse(c => {
-                    if (c.geometry) c.geometry.dispose();
-                    if (c.material) {
-                        if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
-                        else c.material.dispose();
-                    }
-                });
-                envGroup.remove(child);
-            }
+            disposeGroup(envGroup);
+            animatedObjects = [];
 
             const theme = THEMES[currentThemeKey];
 
-            // Ocean Water / Outer Base
-            const oceanGeo = new THREE.PlaneGeometry(600, 600);
-            const oceanMat = new THREE.MeshStandardMaterial({
-                color: theme.waterColor,
-                roughness: 0.15,
-                metalness: currentThemeKey === 'cyberpunk' ? 0.6 : 0.3,
-                transparent: true,
-                opacity: 0.95
-            });
-            const oceanMesh = new THREE.Mesh(oceanGeo, oceanMat);
-            oceanMesh.rotation.x = -Math.PI / 2;
-            oceanMesh.position.y = -1.2;
-            oceanMesh.receiveShadow = true;
-            envGroup.add(oceanMesh);
+            if (currentThemeKey === 'metropolis') {
+                const oceanGeo = new THREE.PlaneGeometry(600, 600);
+                const oceanMat = new THREE.MeshStandardMaterial({ color: theme.waterColor, roughness: 0.1, metalness: 0.2, transparent: true, opacity: 0.9 });
+                const oceanMesh = new THREE.Mesh(oceanGeo, oceanMat);
+                oceanMesh.rotation.x = -Math.PI / 2;
+                oceanMesh.position.y = -1.5;
+                oceanMesh.receiveShadow = true;
+                envGroup.add(oceanMesh);
 
-            // Surrounding Island Base
-            const islandGeo = new THREE.CylinderGeometry(cityTotalSize / 2 + 18, cityTotalSize / 2 + 25, 1.2, 32);
-            const islandMat = new THREE.MeshStandardMaterial({
-                color: theme.islandColor,
-                roughness: 0.7
-            });
-            const islandMesh = new THREE.Mesh(islandGeo, islandMat);
-            islandMesh.position.y = -1.1;
-            islandMesh.receiveShadow = true;
-            envGroup.add(islandMesh);
+                const islandRadius = 18;
+                const islandDist = cityTotalSize / 2 + 30;
+                const angles = [0, Math.PI/2, Math.PI, Math.PI*1.5];
+                angles.forEach((angle, idx) => {
+                    // Island Base
+                    const islandGeo = new THREE.CylinderGeometry(islandRadius, islandRadius + 4, 2, 32);
+                    const islandMat = new THREE.MeshStandardMaterial({ color: theme.islandColor, roughness: 0.8 });
+                    const island = new THREE.Mesh(islandGeo, islandMat);
+                    const ix = Math.cos(angle) * islandDist;
+                    const iz = Math.sin(angle) * islandDist;
+                    island.position.set(ix, -0.8, iz);
+                    island.receiveShadow = true;
+                    envGroup.add(island);
 
-            // Horizon Mountains / Hills
-            const hillMat = new THREE.MeshStandardMaterial({ color: theme.islandColor, roughness: 0.9 });
-            for (let i = 0; i < 14; i++) {
-                const hRad = 20 + Math.random() * 30;
-                const hHeight = 15 + Math.random() * 30;
-                const hillGeo = new THREE.ConeGeometry(hRad, hHeight, 6);
-                const hill = new THREE.Mesh(hillGeo, hillMat);
-                
-                const angle = (i / 14) * Math.PI * 2 + (Math.random() - 0.5) * 0.2;
-                const radius = cityTotalSize / 2 + 65 + Math.random() * 40;
-                hill.position.set(Math.cos(angle) * radius, hHeight / 2 - 2, Math.sin(angle) * radius);
-                hill.castShadow = true;
-                hill.receiveShadow = true;
-                envGroup.add(hill);
+                    // Mini City on Island
+                    for(let j=0; j<8; j++) {
+                        const h = 3 + Math.random()*8;
+                        const bMat = new THREE.MeshStandardMaterial({ color: theme.wallColors[Math.floor(Math.random()*theme.wallColors.length)] });
+                        const b = new THREE.Mesh(new THREE.BoxGeometry(3, h, 3), bMat);
+                        b.position.set(ix + (Math.random()-0.5)*14, h/2 - 0.5, iz + (Math.random()-0.5)*14);
+                        b.castShadow = true;
+                        envGroup.add(b);
+                    }
+
+                    // Perfect Bridge Math to connect edge-to-edge
+                    const bridgeStart = cityTotalSize / 2 + 0.5; // Slight overlap with main city
+                    const bridgeEnd = islandDist - islandRadius + 0.5; // Slight overlap with island
+                    const bridgeLength = bridgeEnd - bridgeStart;
+                    const bridgeCenterDist = bridgeStart + bridgeLength / 2;
+
+                    const bridgeGeo = new THREE.BoxGeometry(bridgeLength, 0.4, 4);
+                    const bridgeMat = new THREE.MeshStandardMaterial({ color: 0x475569 });
+                    const bridge = new THREE.Mesh(bridgeGeo, bridgeMat);
+                    bridge.position.set(Math.cos(angle) * bridgeCenterDist, -0.5, Math.sin(angle) * bridgeCenterDist);
+                    bridge.rotation.y = -angle;
+                    bridge.receiveShadow = true;
+                    envGroup.add(bridge);
+
+                    // Bridge Cars
+                    for (let i=0; i<3; i++) {
+                        const isRed = Math.random() > 0.5;
+                        const carMat = new THREE.MeshStandardMaterial({ color: isRed ? 0xf43f5e : 0x3b82f6 });
+                        const car = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.6, 0.6), carMat);
+                        car.position.set((Math.random()-0.5)*bridgeLength, 0.5, isRed ? 1.0 : -1.0);
+                        bridge.add(car);
+                        animatedObjects.push({ mesh: car, type: 'car_bridge', speed: 0.05 + Math.random()*0.05, limit: bridgeLength / 2 - 1, dir: isRed ? 1 : -1 });
+                    }
+                });
+
+            } else if (currentThemeKey === 'village') {
+                // Base is massive WATER extending all the way to the mountains
+                const oceanGeo = new THREE.PlaneGeometry(600, 600);
+                const oceanMat = new THREE.MeshStandardMaterial({ color: theme.waterColor, roughness: 0.1, metalness: 0.1 });
+                const ocean = new THREE.Mesh(oceanGeo, oceanMat);
+                ocean.rotation.x = -Math.PI / 2;
+                ocean.position.y = -0.8;
+                ocean.receiveShadow = true;
+                envGroup.add(ocean);
+
+                // Inner Land (Kuning Kecoklatan) acting as a large island pad under the main city
+                const landRadius = cityTotalSize / 2 + 15;
+                const landGeo = new THREE.CylinderGeometry(landRadius, landRadius + 2, 0.5, 64);
+                const landMat = new THREE.MeshStandardMaterial({ color: 0xca8a4b, roughness: 1.0 }); 
+                const land = new THREE.Mesh(landGeo, landMat);
+                land.position.set(0, -0.6, 0); // slightly above water, slightly below city plate
+                land.receiveShadow = true;
+                envGroup.add(land);
+
+                // Mountain Ring (rising straight out of the water in the distance)
+                const mtnCount = 24;
+                const mtnRadius = cityTotalSize / 2 + 45;
+                for(let i=0; i<mtnCount; i++) {
+                    const angle = (i/mtnCount) * Math.PI * 2 + (Math.random()-0.5)*0.2;
+                    const h = 15 + Math.random()*30;
+                    const r = 12 + Math.random()*10;
+                    const mtnGeo = new THREE.ConeGeometry(r, h, 6);
+                    const mtnMat = new THREE.MeshStandardMaterial({ color: theme.islandColor, roughness: 0.9 });
+                    const mtn = new THREE.Mesh(mtnGeo, mtnMat);
+                    mtn.position.set(Math.cos(angle)*mtnRadius, h/2 - 0.8, Math.sin(angle)*mtnRadius);
+                    mtn.receiveShadow = true;
+                    mtn.castShadow = true;
+                    
+                    if (h > 25) {
+                        const snowH = h * 0.35;
+                        const snowR = r * 0.35;
+                        const snowGeo = new THREE.ConeGeometry(snowR, snowH, 6);
+                        const snowMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
+                        const snow = new THREE.Mesh(snowGeo, snowMat);
+                        snow.position.y = h/2 - snowH/2 + 0.1;
+                        mtn.add(snow);
+                    }
+                    envGroup.add(mtn);
+                }
+
+            } else if (currentThemeKey === 'cyberpunk') {
+                // Cyber-Abyss Floor
+                const abyssGeo = new THREE.PlaneGeometry(600, 600);
+                const abyssMat = new THREE.MeshStandardMaterial({ color: 0x020617, roughness: 0.5 });
+                const abyss = new THREE.Mesh(abyssGeo, abyssMat);
+                abyss.rotation.x = -Math.PI / 2;
+                abyss.position.y = -50; // Deep bottomless feel
+                envGroup.add(abyss);
+
+                // Hologram Landing Pads (Multiplied color to trigger Bloom)
+                for(let i=0; i<6; i++) {
+                    const angle = (i/6)*Math.PI*2 + Math.PI/6;
+                    const dist = cityTotalSize/2 + 30 + Math.random()*25; // Lebih jauh dari permukaan utama
+                    const padGeo = new THREE.RingGeometry(6, 7.5, 32);
+                    const neonColor = theme.neonColors[i % theme.neonColors.length];
+                    const padMat = new THREE.MeshBasicMaterial({ 
+                        color: new THREE.Color(neonColor).multiplyScalar(2.5), 
+                        side: THREE.DoubleSide 
+                    });
+                    const pad = new THREE.Mesh(padGeo, padMat);
+                    pad.rotation.x = -Math.PI / 2;
+                    pad.position.set(Math.cos(angle)*dist, -5 - Math.random()*5, Math.sin(angle)*dist);
+                    envGroup.add(pad);
+                }
+
+                // Data Streams (Motherboard Circuits out into the abyss)
+                for(let i=0; i<30; i++) {
+                    const streamGeo = new THREE.BoxGeometry(0.4, 0.2, 10 + Math.random()*30);
+                    const neonColor = theme.neonColors[Math.floor(Math.random()*theme.neonColors.length)];
+                    const streamMat = new THREE.MeshBasicMaterial({ 
+                        color: new THREE.Color(neonColor).multiplyScalar(2.0) 
+                    });
+                    const stream = new THREE.Mesh(streamGeo, streamMat);
+                    
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = cityTotalSize/2 + 5 + streamGeo.parameters.depth/2;
+                    stream.position.set(Math.cos(angle)*dist, -2 - Math.random()*15, Math.sin(angle)*dist);
+                    stream.rotation.y = -angle + Math.PI/2;
+                    envGroup.add(stream);
+                }
+
+                // Hovercars (Below city level)
+                for(let i=0; i<35; i++) {
+                    const neonColor = theme.neonColors[Math.floor(Math.random()*theme.neonColors.length)];
+                    const neonMat = new THREE.MeshBasicMaterial({ 
+                        color: new THREE.Color(neonColor).multiplyScalar(2.5) 
+                    });
+                    const hover = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.2, 0.4), neonMat);
+                    
+                    const yPos = -2 - Math.random()*20; 
+                    const zPos = (Math.random()-0.5) * cityTotalSize * 2;
+                    hover.position.set(-cityTotalSize * 1.5, yPos, zPos);
+                    
+                    const trailGeo = new THREE.BoxGeometry(8.0, 0.05, 0.1);
+                    const trailMat = new THREE.MeshBasicMaterial({ 
+                        color: new THREE.Color(neonColor).multiplyScalar(1.5), 
+                        transparent: true, 
+                        opacity: 0.6 
+                    });
+                    const trail = new THREE.Mesh(trailGeo, trailMat);
+                    trail.position.x = -4.0;
+                    hover.add(trail);
+
+                    envGroup.add(hover);
+                    animatedObjects.push({ mesh: hover, type: 'hovercar', speed: 0.8 + Math.random()*1.5, limit: cityTotalSize * 1.5 });
+                }
             }
-
-            // Ring Perimeter Bridge (Empty, no cars)
-            const ringRadius = cityTotalSize / 2 + 6;
-            const ringGeo = new THREE.RingGeometry(ringRadius - 1.2, ringRadius + 1.2, 48);
-            const ringMat = new THREE.MeshStandardMaterial({
-                color: currentThemeKey === 'cyberpunk' ? 0x312e81 : 0x334155,
-                side: THREE.DoubleSide,
-                roughness: 0.6
-            });
-            const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-            ringMesh.rotation.x = -Math.PI / 2;
-            ringMesh.position.y = -0.52;
-            ringMesh.receiveShadow = true;
-            envGroup.add(ringMesh);
         }
 
-        /* ----------------------------------------------------
-           QR CODE GENERATOR & MAPPING
-        ---------------------------------------------------- */
         function generateQRCity() {
             const inputText = document.getElementById('qr-text').value.trim() || 'https://google.com';
-
             try {
                 const qr = qrcode(0, 'M');
                 qr.addData(inputText);
                 qr.make();
 
                 gridCount = qr.getModuleCount();
-                
                 currentQRMatrix = [];
                 for (let r = 0; r < gridCount; r++) {
                     const row = [];
@@ -825,8 +946,7 @@
                     currentQRMatrix.push(row);
                 }
 
-                document.getElementById('grid-info-badge').innerHTML = 
-                    `<i class="fa-solid fa-border-all"></i> Matrix: ${gridCount} × ${gridCount} (${gridCount * gridCount} modul)`;
+                document.getElementById('grid-info-badge').innerHTML = `<i class="fa-solid fa-border-all"></i> Matrix: ${gridCount} × ${gridCount} (${gridCount * gridCount} modul)`;
 
                 applyThemeLighting();
                 buildCityMesh();
@@ -837,11 +957,8 @@
             }
         }
 
-        /* ----------------------------------------------------
-           BUILD 3D MESHES BASED ON SELECTED THEME
-        ---------------------------------------------------- */
         function buildCityMesh() {
-            clearCityGroup();
+            disposeGroup(cityGroup);
 
             const theme = THEMES[currentThemeKey];
             const cellSize = 1.6;
@@ -851,24 +968,71 @@
             buildOuterEnvironment(totalSize);
             createClouds();
 
-            // 1. Base City Ground Plate
-            const groundGeo = new THREE.BoxGeometry(totalSize + 4, 1.0, totalSize + 4);
-            const groundMat = new THREE.MeshStandardMaterial({
-                color: theme.groundColor,
-                roughness: 0.3
-            });
+            // Base City Ground Plate (Diperluas untuk Cyberpunk)
+            const basePadding = currentThemeKey === 'cyberpunk' ? 5 : 2;
+            const borderPadding = currentThemeKey === 'cyberpunk' ? 5.6 : 2.4;
+            
+            const groundGeo = new THREE.BoxGeometry(totalSize + basePadding, 1.0, totalSize + basePadding);
+            
+            let groundMat;
+            if (currentThemeKey === 'cyberpunk') {
+                const topMat = new THREE.MeshStandardMaterial({ color: theme.groundColor, roughness: 0.8 });
+                const blackMat = new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.8 });
+                // THREE.BoxGeometry material index: [Right, Left, Top, Bottom, Front, Back]
+                groundMat = [blackMat, blackMat, topMat, blackMat, blackMat, blackMat];
+            } else {
+                groundMat = new THREE.MeshStandardMaterial({ color: theme.groundColor, roughness: 0.8 });
+            }
+
             const groundMesh = new THREE.Mesh(groundGeo, groundMat);
             groundMesh.position.set(0, -0.55, 0);
             groundMesh.receiveShadow = true;
             cityGroup.add(groundMesh);
 
-            const borderGeo = new THREE.BoxGeometry(totalSize + 4.4, 0.4, totalSize + 4.4);
-            const borderMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6 });
+            const borderGeo = new THREE.BoxGeometry(totalSize + borderPadding, 0.4, totalSize + borderPadding);
+            const borderMatColor = currentThemeKey === 'cyberpunk' ? 0x000000 : 0x1e293b;
+            const borderMat = new THREE.MeshStandardMaterial({ color: borderMatColor, roughness: 0.6 });
             const borderMesh = new THREE.Mesh(borderGeo, borderMat);
             borderMesh.position.set(0, -0.9, 0);
             cityGroup.add(borderMesh);
 
-            // Pre-generate window textures for each wall color
+            // --- CYBERPUNK EDGE NEON ---
+            if (currentThemeKey === 'cyberpunk') {
+                const edgeNeonMat1 = new THREE.MeshBasicMaterial({ color: new THREE.Color(0x06b6d4).multiplyScalar(4.0) }); 
+                const edgeNeonMat2 = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xf43f5e).multiplyScalar(4.0) }); 
+                const L = totalSize + basePadding;
+                const count = Math.floor(L / 2.5); 
+                const yPos = -0.55; // Posisi vertikal di tengah dinding alas
+                const zFightOffset = L/2 + 0.05; // Menonjol sedikit keluar dari dinding
+                
+                for (let side = 0; side < 4; side++) {
+                    for (let i = 0; i < count; i++) {
+                        const nodeLen = 1.0 + Math.random() * 1.5;
+                        const nodeGeo = new THREE.BoxGeometry(nodeLen, 0.15, 0.1);
+                        const mat = Math.random() > 0.5 ? edgeNeonMat1 : edgeNeonMat2;
+                        const node = new THREE.Mesh(nodeGeo, mat);
+                        
+                        const nodeOffset = -L/2 + (i + 0.5) * (L / count);
+                        
+                        if (side === 0) { // Utara
+                            node.position.set(nodeOffset, yPos, -zFightOffset);
+                        } else if (side === 1) { // Selatan
+                            node.position.set(nodeOffset, yPos, zFightOffset);
+                        } else if (side === 2) { // Timur
+                            node.rotation.y = Math.PI / 2;
+                            node.position.set(zFightOffset, yPos, nodeOffset);
+                        } else if (side === 3) { // Barat
+                            node.rotation.y = Math.PI / 2;
+                            node.position.set(-zFightOffset, yPos, nodeOffset);
+                        }
+                        
+                        node.userData.isEdgeNeon = true;
+                        cityGroup.add(node);
+                    }
+                }
+            }
+            // -----------------------------
+
             const windowTextures = [];
             if (currentThemeKey !== 'village') {
                 theme.wallColors.forEach(color => {
@@ -876,11 +1040,8 @@
                 });
             }
 
-            // CRITICAL RULE: Pure black unlit material for ALL top roofs to ensure perfect QR scanning
             const pureBlackRoofMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-            
-            // Road Texture
-            const roadTexture = createRoadTexture(theme);
+            roadTextureCache = createRoadTexture(theme);
 
             function isFinderPattern(r, c) {
                 if (r < 7 && c < 7) return true;
@@ -895,18 +1056,13 @@
                     const z = offset + r * cellSize;
                     const val = currentQRMatrix[r][c];
 
-                    // Gunakan layoutSeedOffset untuk mengacak ulang bentuk bangunan saat tombol "Acak Tata Letak" ditekan
                     const seed = Math.abs(Math.sin((r + layoutSeedOffset) * 12.9898 + (c + layoutSeedOffset) * 78.233) * 43758.5453) % 1;
 
                     if (val === 1) {
-                        // ========================================================
-                        // --- QR MODULE 1: BUILDINGS / HOUSES ---
-                        // ========================================================
                         const isFinder = isFinderPattern(r, c);
-                        const bSize = cellSize; // Use full cell size for the roof cap to avoid gaps
+                        const bSize = cellSize;
                         const buildingGroup = new THREE.Group();
 
-                        // Pick random color and texture based on seed
                         const colorIdx = Math.floor(seed * theme.wallColors.length);
                         const wallColorHex = theme.wallColors[colorIdx];
                         const wallMat = new THREE.MeshStandardMaterial({ 
@@ -916,149 +1072,111 @@
                         });
 
                         if (currentThemeKey === 'metropolis') {
-                            // --- TEMA 1: METROPOLIS ---
                             const h = isFinder ? 2.5 : (1.0 + seed * 3.5);
-                            const bodySize = bSize * 0.95; // Slightly smaller body for gaps
-                            
-                            const bodyGeo = new THREE.BoxGeometry(bodySize, h, bodySize);
-                            const body = new THREE.Mesh(bodyGeo, wallMat);
+                            const body = new THREE.Mesh(new THREE.BoxGeometry(bSize * 0.95, h, bSize * 0.95), wallMat);
                             body.position.y = h / 2;
                             body.castShadow = true;
                             body.receiveShadow = true;
                             buildingGroup.add(body);
 
-                            // ABSOLUTE BLACK ROOF CAP
                             const roofCap = new THREE.Mesh(new THREE.BoxGeometry(bSize, 0.05, bSize), pureBlackRoofMat);
                             roofCap.position.y = h + 0.025;
                             buildingGroup.add(roofCap);
 
                         } else if (currentThemeKey === 'village') {
-                            // --- TEMA 2: VILLAGE (RUMAH PEDESAAN) ---
-                            // Shorter height for houses
                             const h = isFinder ? 1.0 : (0.4 + seed * 0.6);
-                            const bodySize = bSize * 0.85; 
-
-                            // House Base
-                            const body = new THREE.Mesh(new THREE.BoxGeometry(bodySize, h, bodySize), wallMat);
+                            const body = new THREE.Mesh(new THREE.BoxGeometry(bSize * 0.85, h, bSize * 0.85), wallMat);
                             body.position.y = h / 2;
                             body.castShadow = true;
                             body.receiveShadow = true;
                             buildingGroup.add(body);
 
-                            // Slanted Gable Roof (Pyramid shape)
-                            // A ConeGeometry with 4 sides, rotated by Math.PI/4 creates a perfect square base pyramid.
-                            // To perfectly cover the bSize x bSize area, the radius must be bSize / sqrt(2)
-                            const roofRadius = bSize / Math.sqrt(2);
-                            const roofGeo = new THREE.ConeGeometry(roofRadius, 0.6, 4);
-                            const roof = new THREE.Mesh(roofGeo, pureBlackRoofMat); // MUST BE PURE BLACK
+                            const roofGeo = new THREE.ConeGeometry(bSize / Math.sqrt(2), 0.6, 4);
+                            const roof = new THREE.Mesh(roofGeo, pureBlackRoofMat);
                             roof.position.y = h + 0.3;
                             roof.rotation.y = Math.PI / 4;
                             buildingGroup.add(roof);
 
                         } else {
-                            // --- TEMA 3: CYBERPUNK (FUTURISTIK SCI-FI) ---
+                            // Cyberpunk Motherboard Server Blocks
                             const h = isFinder ? 3.0 : (1.2 + seed * 4.5);
                             const bodySize = bSize * 0.9;
                             
-                            // Main Core Tower
                             const core = new THREE.Mesh(new THREE.BoxGeometry(bodySize, h, bodySize), wallMat);
                             core.position.y = h / 2;
                             core.castShadow = true;
-                            core.receiveShadow = true;
                             buildingGroup.add(core);
 
-                            // Asymmetrical Futuristic Blocks attached to sides (STRICTLY WITHIN CELL BOUNDS)
-                            const blockCount = 1 + Math.floor(seed * 3);
-                            for (let i = 0; i < blockCount; i++) {
-                                const bh = h * (0.2 + (seed * i % 0.5));
-                                const bw = bodySize * (0.5 + (seed * i % 0.4));
-                                const b = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bodySize * 1.05), wallMat);
-                                b.position.y = bh / 2 + (seed * i % (h - bh));
-                                b.castShadow = true;
-                                buildingGroup.add(b);
-                            }
+                            // Multiply neon colors so they exceed bloom threshold
+                            const neonColorHex = theme.neonColors[Math.floor(seed * 100) % theme.neonColors.length];
+                            const neonMat = new THREE.MeshBasicMaterial({ 
+                                color: new THREE.Color(neonColorHex).multiplyScalar(2.5) 
+                            });
+                            
+                            // Horizontal neon ring
+                            const hStrip = new THREE.Mesh(new THREE.BoxGeometry(bodySize * 1.02, 0.1, bodySize * 1.02), neonMat);
+                            hStrip.position.y = h * (0.3 + (seed % 0.5));
+                            buildingGroup.add(hStrip);
 
-                            // Glowing Neon Side Strips
-                            const neonColor = theme.neonColors[Math.floor(seed * 100) % theme.neonColors.length];
-                            const neonMat = new THREE.MeshBasicMaterial({ color: neonColor });
-                            // A flat box wrapping the core, but slightly smaller than cell size
-                            const strip = new THREE.Mesh(new THREE.BoxGeometry(bodySize * 1.02, 0.15, bodySize * 1.02), neonMat);
-                            strip.position.y = h * (0.3 + (seed % 0.6));
-                            buildingGroup.add(strip);
+                            // Vertical neon stripe
+                            const vStrip = new THREE.Mesh(new THREE.BoxGeometry(0.1, h, bodySize * 1.02), neonMat);
+                            vStrip.position.set((seed > 0.5 ? 0.3 : -0.3), h/2, 0);
+                            buildingGroup.add(vStrip);
 
-                            // ABSOLUTE BLACK ROOF CAP TO HIDE NEON IN TOP DOWN VIEW
                             const roofCap = new THREE.Mesh(new THREE.BoxGeometry(bSize, 0.05, bSize), pureBlackRoofMat);
                             roofCap.position.y = h + 0.025;
                             buildingGroup.add(roofCap);
                         }
 
                         buildingGroup.position.set(x, 0, z);
-
-                        // GSAP Entrance
                         buildingGroup.scale.set(1, 0.01, 1);
-                        gsap.to(buildingGroup.scale, {
-                            y: 1,
-                            duration: 0.6 + (r + c) * 0.012,
-                            ease: 'back.out(1.2)',
-                            delay: (r * 0.008 + c * 0.004)
-                        });
-
+                        gsap.to(buildingGroup.scale, { y: 1, duration: 0.6 + (r + c) * 0.012, ease: 'back.out(1.2)', delay: (r * 0.008 + c * 0.004) });
                         cityGroup.add(buildingGroup);
 
                     } else {
-                        // ========================================================
-                        // --- QR MODULE 0: ROADS & EMPTY SPACES ---
-                        // ========================================================
+                        // QR MODULE 0: Roads & Empty Spaces
                         const roadGeo = new THREE.BoxGeometry(cellSize - 0.05, 0.04, cellSize - 0.05);
-                        const roadMat = new THREE.MeshStandardMaterial({
-                            color: theme.roadColor,
-                            roughness: 0.5,
-                            map: roadTexture
+                        
+                        // Using a plain matte standard material to prevent the floor from blooming and causing glare
+                        const roadMat = new THREE.MeshStandardMaterial({ 
+                            color: theme.roadColor, 
+                            roughness: 0.8, 
+                            map: roadTextureCache 
                         });
+
                         const roadTile = new THREE.Mesh(roadGeo, roadMat);
                         roadTile.position.set(x, 0.02, z);
                         roadTile.receiveShadow = true;
+                        roadTile.userData.isRoad = true;
                         cityGroup.add(roadTile);
 
                         if (!isFinderPattern(r, c)) {
-                            if (seed > 0.85) {
-                                // 🌲 Tree Props
+                            if (currentThemeKey === 'metropolis' && seed > 0.85) {
                                 const treeGroup = new THREE.Group();
-                                const trunk = new THREE.Mesh(
-                                    new THREE.CylinderGeometry(0.06, 0.1, 0.5, 6), 
-                                    new THREE.MeshStandardMaterial({ color: 0x5c4033 })
-                                );
+                                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.1, 0.5, 6), new THREE.MeshStandardMaterial({ color: 0x5c4033 }));
                                 trunk.position.y = 0.25;
-
-                                const leafColor = currentThemeKey === 'village' ? 0x86efac : (currentThemeKey === 'cyberpunk' ? 0x06b6d4 : 0x22c55e);
-                                const leaves = new THREE.Mesh(
-                                    new THREE.ConeGeometry(0.35, 0.9, 6), 
-                                    new THREE.MeshStandardMaterial({ color: leafColor, roughness: 0.7 })
-                                );
+                                const leaves = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.9, 6), new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.7 }));
                                 leaves.position.y = 0.75;
-
                                 treeGroup.add(trunk);
                                 treeGroup.add(leaves);
                                 treeGroup.position.set(x + (seed - 0.85) * 0.4, 0, z + (seed - 0.85) * 0.4);
                                 treeGroup.scale.set(0.8, 0.8, 0.8);
                                 cityGroup.add(treeGroup);
                             }
+                            // Village animals have been completely removed as requested
                         }
                     }
                 }
             }
         }
 
-        // Generate specific window texture based on wall color
         function createThemeWindowTexture(wallColorHex, windowColorHex) {
             const canvas = document.createElement('canvas');
             canvas.width = 128;
             canvas.height = 256;
             const ctx = canvas.getContext('2d');
-
             ctx.fillStyle = '#' + wallColorHex.toString(16).padStart(6, '0');
             ctx.fillRect(0, 0, 128, 256);
-
             ctx.fillStyle = '#' + windowColorHex.toString(16).padStart(6, '0');
             for (let r = 0; r < 14; r++) {
                 for (let c = 0; c < 4; c++) {
@@ -1067,7 +1185,6 @@
                     }
                 }
             }
-
             const texture = new THREE.CanvasTexture(canvas);
             texture.wrapS = THREE.RepeatWrapping;
             texture.wrapT = THREE.RepeatWrapping;
@@ -1079,26 +1196,27 @@
             canvas.width = 64;
             canvas.height = 64;
             const ctx = canvas.getContext('2d');
-
             ctx.fillStyle = '#' + theme.roadColor.toString(16).padStart(6, '0');
             ctx.fillRect(0, 0, 64, 64);
 
             if (currentThemeKey === 'cyberpunk') {
-                ctx.strokeStyle = 'rgba(6, 182, 212, 0.4)';
+                ctx.strokeStyle = '#06b6d4'; // Cyan neon strokes on matte base
                 ctx.lineWidth = 2;
                 ctx.strokeRect(0, 0, 64, 64);
-            } else {
+                ctx.strokeRect(16, 16, 32, 32);
+                ctx.beginPath(); ctx.moveTo(32,0); ctx.lineTo(32,64); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0,32); ctx.lineTo(64,32); ctx.stroke();
+            } else if (currentThemeKey === 'metropolis') {
                 ctx.strokeStyle = 'rgba(0, 0, 0, 0.06)';
                 ctx.lineWidth = 4;
                 ctx.strokeRect(0, 0, 64, 64);
             }
-
             return new THREE.CanvasTexture(canvas);
         }
 
-        function clearCityGroup() {
-            while (cityGroup.children.length > 0) {
-                const obj = cityGroup.children[0];
+        function disposeGroup(group) {
+            while (group.children.length > 0) {
+                const obj = group.children[0];
                 obj.traverse((child) => {
                     if (child.geometry) child.geometry.dispose();
                     if (child.material) {
@@ -1106,12 +1224,12 @@
                         else child.material.dispose();
                     }
                 });
-                cityGroup.remove(obj);
+                group.remove(obj);
             }
         }
 
         /* ----------------------------------------------------
-           CAMERA INTERACTIONS & QR PERSPECTIVE FIX
+           CAMERA INTERACTIONS & QR SCANNING
         ---------------------------------------------------- */
         function toggleScanMode(forceMode = null) {
             if (isAnimatingCamera) return;
@@ -1125,82 +1243,45 @@
 
             applyThemeLighting();
 
+            // Hide edge neon to ensure it never ruins the top-down QR matrix
+            if (currentThemeKey === 'cyberpunk') {
+                cityGroup.children.forEach(child => {
+                    if (child.userData && child.userData.isEdgeNeon) {
+                        child.visible = !isScanMode;
+                    }
+                });
+            }
+
             const cellSize = 1.6;
             const totalCitySize = gridCount * cellSize;
             const aspect = window.innerWidth / window.innerHeight;
 
             if (isScanMode) {
                 toggleBtn.classList.add('active');
-                hintPill.querySelector('span').textContent = 'Klik area 3D untuk kembali ke Mode Isometric';
+                hintPill.querySelector('span').textContent = 'Geser kamera untuk kembali ke tampilan bebas';
 
-                // ==============================================================
-                // CRITICAL QR FIX: Use extremely narrow FOV (telephoto effect)
-                // This flattens the perspective like an Orthographic camera,
-                // completely hiding the colorful sides of the buildings!
-                // ==============================================================
-                const targetFov = 3; 
-                const vFovRad = (targetFov * Math.PI) / 180;
-                const paddedSize = totalCitySize * 1.25; 
+                const vFovRad = (42 * Math.PI) / 180;
+                const paddedSize = totalCitySize * 1.35; 
                 let targetY = (paddedSize / 2) / Math.tan(vFovRad / 2);
                 if (aspect < 1) targetY /= aspect;
 
                 gsap.timeline({
-                    onUpdate: () => {
-                        camera.updateProjectionMatrix();
-                        controls.update();
-                    },
+                    onUpdate: () => { controls.update(); },
                     onComplete: () => { isAnimatingCamera = false; }
                 })
-                .to(camera, {
-                    fov: targetFov,
-                    duration: 1.4,
-                    ease: 'power3.inOut'
-                }, 0)
-                .to(camera.position, {
-                    x: 0,
-                    y: targetY,
-                    z: 0,
-                    duration: 1.4,
-                    ease: 'power3.inOut'
-                }, 0)
-                .to(controls.target, {
-                    x: 0,
-                    y: 0,
-                    z: 0,
-                    duration: 1.4,
-                    ease: 'power3.inOut'
-                }, 0);
+                .to(camera.position, { x: 0, y: targetY, z: 0.1, duration: 1.4, ease: 'power3.inOut' }, 0)
+                .to(controls.target, { x: 0, y: 0, z: 0, duration: 1.4, ease: 'power3.inOut' }, 0);
 
             } else {
                 toggleBtn.classList.remove('active');
-                hintPill.querySelector('span').textContent = 'Klik area 3D untuk Scan Mode (Top View)';
+                hintPill.querySelector('span').textContent = 'Gunakan mouse untuk memutar kota 3D';
 
                 gsap.timeline({
-                    onUpdate: () => {
-                        camera.updateProjectionMatrix();
-                        controls.update();
-                    },
+                    onUpdate: () => { controls.update(); },
                     onComplete: () => { isAnimatingCamera = false; }
                 })
-                .to(camera, {
-                    fov: 42,
-                    duration: 1.4,
-                    ease: 'power3.inOut'
-                }, 0)
-                .to(camera.position, {
-                    x: ISO_CAM_POS.x,
-                    y: ISO_CAM_POS.y,
-                    z: ISO_CAM_POS.z,
-                    duration: 1.4,
-                    ease: 'power3.inOut'
-                }, 0)
-                .to(controls.target, {
-                    x: CAM_LOOK_AT.x,
-                    y: CAM_LOOK_AT.y,
-                    z: CAM_LOOK_AT.z,
-                    duration: 1.4,
-                    ease: 'power3.inOut'
-                }, 0);
+                .to(camera.position, { x: ISO_CAM_POS.x, y: ISO_CAM_POS.y, z: ISO_CAM_POS.z, duration: 1.4, ease: 'power3.inOut' }, 0)
+                .to(controls.target, { x: CAM_LOOK_AT.x, y: CAM_LOOK_AT.y, z: CAM_LOOK_AT.z, duration: 1.4, ease: 'power3.inOut' }, 0);
             }
         }
 
@@ -1209,59 +1290,94 @@
         ---------------------------------------------------- */
         function setupEvents() {
             window.addEventListener('resize', onWindowResize);
+            document.getElementById('btn-generate').addEventListener('click', () => { generateQRCity(); });
+            
+            // DOWNLOAD BUTTON - Auto Snap Top-Down
+            document.getElementById('btn-download').addEventListener('click', () => {
+                const wasScanMode = isScanMode;
+                const origPos = camera.position.clone();
+                const origQuat = camera.quaternion.clone();
+                const origTarget = controls.target.clone();
 
-            document.getElementById('btn-generate').addEventListener('click', () => {
-                generateQRCity();
+                // 1. Instantly switch to perfect top-down view
+                isScanMode = true;
+                const totalCitySize = gridCount * 1.6;
+                let targetY = (totalCitySize * 1.35 / 2) / Math.tan(42 * Math.PI / 360);
+                if (camera.aspect < 1) targetY /= camera.aspect;
+                
+                camera.position.set(0, targetY, 0.1);
+                controls.target.set(0, 0, 0);
+                camera.lookAt(0, 0, 0);
+                
+                // 2. Apply scanner-friendly lighting & hide clouds
+                applyThemeLighting();
+                cloudsGroup.visible = false;
+                if (currentThemeKey === 'cyberpunk') {
+                    cityGroup.children.forEach(c => { if (c.userData && c.userData.isEdgeNeon) c.visible = false; });
+                }
+                
+                // 3. Render and extract image
+                if (composer && currentThemeKey === 'cyberpunk') composer.render();
+                else renderer.render(scene, camera);
+                
+                const dataURL = renderer.domElement.toDataURL('image/png');
+                
+                // 4. Restore original state completely
+                isScanMode = wasScanMode;
+                camera.position.copy(origPos);
+                camera.quaternion.copy(origQuat);
+                controls.target.copy(origTarget);
+                
+                applyThemeLighting();
+                cloudsGroup.visible = true;
+                if (currentThemeKey === 'cyberpunk' && !wasScanMode) {
+                    cityGroup.children.forEach(c => { if (c.userData && c.userData.isEdgeNeon) c.visible = true; });
+                }
+                
+                if (composer && currentThemeKey === 'cyberpunk') composer.render();
+                else renderer.render(scene, camera);
+                
+                // 5. Trigger download
+                const link = document.createElement('a');
+                link.download = 'Build-QR-City.png';
+                link.href = dataURL;
+                link.click();
             });
 
-            document.getElementById('qr-text').addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') generateQRCity();
-            });
-
+            document.getElementById('qr-text').addEventListener('keydown', (e) => { if (e.key === 'Enter') generateQRCity(); });
             document.getElementById('theme-select').addEventListener('change', (e) => {
                 currentThemeKey = e.target.value;
                 generateQRCity();
             });
-
-            // Event listener untuk tombol Regenerate (Acak Tata Letak)
             document.getElementById('btn-regenerate').addEventListener('click', () => {
                 layoutSeedOffset = Math.random() * 10000;
                 buildCityMesh();
             });
-
-            // Toggle Panel (Dropdown)
             document.getElementById('panel-toggle').addEventListener('click', () => {
-                const content = document.getElementById('panel-content');
-                const icon = document.getElementById('toggle-icon');
-                content.classList.toggle('collapsed');
-                icon.classList.toggle('collapsed');
+                document.getElementById('panel-content').classList.toggle('collapsed');
+                document.getElementById('toggle-icon').classList.toggle('collapsed');
             });
+            document.getElementById('btn-view-toggle').addEventListener('click', () => { toggleScanMode(); });
+            document.getElementById('btn-reset-cam').addEventListener('click', () => { toggleScanMode(false); });
 
-            document.getElementById('btn-view-toggle').addEventListener('click', () => {
-                toggleScanMode();
-            });
-
-            document.getElementById('btn-reset-cam').addEventListener('click', () => {
-                toggleScanMode(false);
-            });
-
-            let dragCheck = false;
-            let mouseDownTime = 0;
-            const container = document.getElementById('webgl-container');
-
-            container.addEventListener('mousedown', () => {
-                dragCheck = false;
-                mouseDownTime = Date.now();
-            });
-
-            container.addEventListener('mousemove', () => {
-                dragCheck = true;
-            });
-
-            container.addEventListener('click', () => {
-                const clickDuration = Date.now() - mouseDownTime;
-                if (!dragCheck || clickDuration < 200) {
-                    toggleScanMode();
+            controls.addEventListener('start', () => {
+                if (isScanMode && !isAnimatingCamera) {
+                    isScanMode = false;
+                    document.getElementById('btn-view-toggle').classList.remove('active');
+                    document.getElementById('hint-pill').querySelector('span').textContent = 'Gunakan mouse untuk memutar kota 3D';
+                    
+                    applyThemeLighting(); 
+                    
+                    if (currentThemeKey === 'cyberpunk') {
+                        cityGroup.children.forEach(child => {
+                            if (child.userData && child.userData.isEdgeNeon) {
+                                child.visible = true;
+                            }
+                        });
+                    }
+                    
+                    gsap.killTweensOf(camera.position);
+                    gsap.killTweensOf(controls.target);
                 }
             });
         }
@@ -1275,13 +1391,14 @@
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            if (composer) composer.setSize(window.innerWidth, window.innerHeight);
 
             if (isScanMode) {
                 const cellSize = 1.6;
                 const totalCitySize = gridCount * cellSize;
                 const aspect = camera.aspect;
-                const vFovRad = (3 * Math.PI) / 180;
-                let targetY = (totalCitySize * 1.25 / 2) / Math.tan(vFovRad / 2);
+                const vFovRad = (42 * Math.PI) / 180;
+                let targetY = (totalCitySize * 1.35 / 2) / Math.tan(vFovRad / 2);
                 if (aspect < 1) targetY /= aspect;
                 camera.position.y = targetY;
             }
@@ -1299,8 +1416,27 @@
                 cloud.position.z = Math.sin(cloud.userData.angle) * cloud.userData.dist;
             });
 
+            animatedObjects.forEach(obj => {
+                if (obj.type === 'car_bridge') {
+                    obj.mesh.position.x += obj.speed * obj.dir;
+                    if (Math.abs(obj.mesh.position.x) > obj.limit) {
+                        obj.mesh.position.x = -obj.limit * obj.dir;
+                    }
+                } else if (obj.type === 'hovercar') {
+                    obj.mesh.position.x += obj.speed;
+                    if (obj.mesh.position.x > obj.limit) {
+                        obj.mesh.position.x = -obj.limit;
+                    }
+                }
+            });
+
             controls.update();
-            renderer.render(scene, camera);
+            
+            if (composer && currentThemeKey === 'cyberpunk') {
+                composer.render();
+            } else {
+                renderer.render(scene, camera);
+            }
         }
     </script>
 </body>
