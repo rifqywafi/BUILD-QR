@@ -736,10 +736,14 @@
                 bloomPass.strength = 0.0;
             }
 
-            if (isScanMode && currentThemeKey === 'cyberpunk') {
-                ambientLight.intensity = 1.0;
-                mainSunLight.intensity = 1.4;
-                mainSunLight.color.setHex(0xffffff);
+            if (isScanMode) {
+                // Untuk memastikan QR Code ter-scan sempurna dan hasil download bersih tanpa bayangan (terutama metropolis)
+                ambientLight.intensity = theme.ambientIntensity + theme.sunIntensity;
+                mainSunLight.intensity = 0.0; // Matikan matahari agar tidak ada bayangan 3D
+                
+                if (currentThemeKey === 'cyberpunk') {
+                    ambientLight.intensity = 2.4; 
+                }
             } else {
                 ambientLight.intensity = theme.ambientIntensity;
                 mainSunLight.intensity = theme.sunIntensity;
